@@ -1,0 +1,241 @@
+#!/usr/bin/env python3
+import os, re, shutil, sys, glob, argparse
+f***REMOVED*** rdkit import Chem
+f***REMOVED*** rdkit.Chem import Draw, rdmolfiles, rdDetermineBonds
+
+
+### Filename parser
+parser = argparse.ArgumentParser(
+                    prog='TS_pipeline',
+                    description='Semi-automatically find TS for molecular switches',)
+
+parser.add_argument('filename', nargs='+', help='XYZ file to process')
+args = parser.parse_args()
+
+
+### Installation section
+pysis_path = '/home/marlen/.local/bin/pysis'
+xtb_path = '/usr/local/bin/xtb'
+crest_path = '/usr/local/bin/crest3'
+
+
+
+### Functions section
+
+def mkbasedir_and_cp(filename, prefix='', suffix=''):
+    '''
+    Creates a directory with the basename of a file, moves file
+    in the directory and changes working directory
+    to the freshly created
+        Arguments:
+    filename (str) - name of the file to take basename f***REMOVED***
+    suffix (str)   - modify the basename with the suffix (no predefined separator!)
+        Returns:
+    basename (str) - path to copied file in the created directory
+    '''
+    split_name = re.split(r'\.', filename)
+    basename = '.'.join(split_name[0:-1])
+    if suffix:
+        basename = basename + suffix
+    if prefix:
+        basename = prefix + basename
+    os.mkdir(basename)
+    print(f'{basename} created')
+#    os.rename(f'{filename}', f'{basename}/{filename}')
+    shutil.copy(f'{filename}', f'{basename}/{filename}')
+    path = os.path.abspath(f'{basename}/{filename}')
+    return path
+
+def xtb_opt(path, model='--gfn2', solvent=''):
+    '''
+    Optimizes molecule filename.xyz with xtb at gfn2 level of theory
+        Arguments:
+    path         - path to XYZ geometry file
+        Returns:
+    opt_path - XYZ geometry of optimized molecule
+    '''
+    initial_path = os.getcwd()
+    dir = os.path.dirname(os.path.abspath(path))
+    os.chdir(dir)
+    os.sy***REMOVED***m(f'{xtb_path} {path} --opt {model} {solvent} | tee {path}_xtb_opt.log')
+    opt_path = dir + '/xtbopt.xyz'
+    os.chdir(initial_path)
+    return opt_path
+    
+def xtb_scan_rotation(path, model='--gfn2', solvent='', dihedral='0,0,0,0,0', scan='0,0,0', optlev=''):
+    '''
+    Run a scan along selected dihedral of molecule filename.xyz with xtb at gfn2 level of theory
+        Arguments:
+    path         - path to XYZ geometry file
+        Returns:
+    rotated_path - XYZ geometry of alternative dia***REMOVED***reomer
+    '''
+    scan_input=f'''$constrain
+ force constant=0.05
+ dihedral: {dihedral}
+$scan
+ 1: {scan}
+$end'''
+    initial_path = os.getcwd()
+    dir = os.path.dirname(os.path.abspath(path))
+    os.chdir(dir)
+    with open('scan.inp','w') as file:
+        file.write(scan_input)
+    os.sy***REMOVED***m(f'{xtb_path} {path} --opt --input scan.inp {model} {solvent} | tee {path}_xtb_dih_scan.log')
+    rotated_path = dir + '/xtbopt.xyz'
+    os.chdir(initial_path)
+    return rotated_path
+
+def xtb_scan_inversion(path, model='--gfn2', solvent='', angle='0,0,0,0.0', scan='0,0,0', optlev=''):
+    '''
+    Run a scan along selected angle of molecule filename.xyz with xtb at gfn2 level of theory
+        Arguments:
+    path         - path to XYZ geometry file
+        Returns:
+    inverted_path - XYZ geometry of alternative dia***REMOVED***reomer
+    '''
+# dihedral: 11,10,8,7,180.0
+    scan_input=f'''$constrain
+ force constant=5.00
+ angle: {angle}
+$scan
+ 1: {scan}
+$end'''
+    initial_path = os.getcwd()
+    dir = os.path.dirname(os.path.abspath(path))
+    os.chdir(dir)
+    with open('scan.inp','w') as file:
+        file.write(scan_input)
+    os.sy***REMOVED***m(f'{xtb_path} {path} --opt --input scan.inp {model} {solvent} | tee {path}_xtb_angle_scan.log')
+    inverted_path = dir + '/xtbopt.xyz'
+    os.chdir(initial_path)
+    return inverted_path
+
+def pwd(prnt=False):
+    '''
+    Just python-wrapped pwd
+    '''
+    os.sy***REMOVED***m('pwd')
+    
+def pysis(path, input_yaml, xyz_1, xyz_2):
+    '''
+    Calls pysis (pysisyphus) with .yaml input and geometries xyz_1 and xyz_2
+        Arguments:
+    path         - where to run the job
+    input_yaml   - YAML specification of the job (details at https://pysisyphus.readthedocs.io/en/latest/index.html)
+    xyz_1        - first geometry (PES minimum)
+    xyz_2        - second geometry (PES minimum)
+    '''
+    if not path: path = 'new_TS'
+    if not input_yaml: print("Please provide input .yaml specification for pysis")
+    if not (xyz_1 and xyz_2): 
+        print("You need exactly two geometries to continue, exiting")
+        sys.exit()
+    new_names = ['TS.yaml', 'geom_1.xyz', 'geom_2.xyz']
+    initial_path = os.getcwd()
+    dir = os.path.dirname(os.path.abspath(path))
+    for i, file in enumerate([input_yaml, xyz_1, xyz_2]):
+        shutil.copy(f'{file}', f'{dir}/{new_names[i]}')
+
+    xyz_1_name = os.path.basename(xyz_1)
+    xyz_2_name = os.path.basename(xyz_2)
+    os.chdir(dir)
+    os.sy***REMOVED***m(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
+    os.chdir(initial_path)
+    TS_path = f'{dir}/ts_final_geometry.xyz'
+    return TS_path
+
+def find_fragment_atoms(xyzfile, reference_smiles):
+    """
+    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+
+    Fixes:
+    - Uses RDKit's DetermineConnectivity() to assign bonds to XYZ molecules.
+    - Sanitizes the molecule to ensure valence is properly assigned.
+    
+    :param mol: RDKit molecule
+    :param reference_fragment: RDKit molecule representing the common fragment
+    :return: List of atom indices that match the fragment
+    """
+    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+    rdDetermineBonds.DetermineConnectivity(mol)
+    Chem.rdDetermineBonds.DetermineBondOrders(mol)
+    Chem.SanitizeMol(mol)
+    Chem.Kekulize(mol)
+    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    matches = mol.GetSubstructMatches(reference_fragment)
+    if not matches:
+        raise ValueError("Reference fragment not found in the molecule!")
+    return matches[0]  # Return the first match    
+    
+def crest_constrained_sampling(dir,
+                               path_to_TS, 
+                               model='--gfn2', 
+                               solvent='', 
+                               angle='0,0,0,0.0', 
+                               optlev='', 
+                               cinp='constraints.inp'):
+    '''
+    Runs CREST conformational sampling with constrain (predefined in the function).
+    '''
+    initial_path = os.getcwd()
+    shutil.copy(f'{path_to_TS}', f'{dir}')
+    os.chdir(dir)
+    constraint_input=f'''$constrain
+ force constant=5.00
+ angle: {angle}
+ dihedral: 5,7,8,10
+$end'''
+    with open('constraints.inp','w') as file:
+        file.write(constraint_input)
+    crest_line=f'{crest_path} {path_to_TS} --cinp {cinp} {optlev} {model} {solvent} | tee {path_to_TS}_xtb_angle_scan.log'
+    print(f'CREST started with the following command: {crest_line}')
+    os.sy***REMOVED***m(crest_line)
+    TS_conformers_path = dir + '/crest_conformers.xyz'
+    os.chdir(initial_path)
+    return TS_conformers_path
+
+
+
+
+#######################################################################
+#######################################################################
+#######################################################################
+
+
+if __name__== '__main__':
+    mols=args.filename
+
+
+    for mol in mols:
+        #1 Optimization
+        to_optimize = mkbasedir_and_cp(mol, prefix='1_', suffix='_xtb_opt')
+        optimized = xtb_opt(to_optimize, solvent='--alpb acetonitrile')
+         
+        # Detecting dihedral	
+        print(mol)
+        dihedral_nums = find_fragment_atoms(mol, 'FC=NC')
+        dihedral_nums = list(dihedral_nums)
+        dihedral_nums = list(map(lambda x: x+1, dihedral_nums))
+        dihedral_line = ','.join(map(str,dihedral_nums))
+        dihedral_line_xtb = dihedral_line + ',0.0'
+        angle_CNC_line = ','.join(map(str,dihedral_nums[1:]))
+        angle_CNC_line = angle_CNC_line + ',auto'
+        
+        #2 Scan dihedral (rotation E to Z or Z to E)
+        to_scan_dih = mkbasedir_and_cp(mol, prefix='2_', suffix='_xtb_scan_dih')
+        dih_scanned = xtb_scan_rotation(to_scan_dih, dihedral=dihedral_line_xtb, scan='0.0, 180.0, 18', solvent='--alpb acetonitrile')
+        
+        #3 Pysis to find TS between E and Z (through inversion?)
+        for_pysis = mkbasedir_and_cp(mol, prefix='3_', suffix='_pysis')
+        TS = pysis(for_pysis, 'TS.yaml', optimized, dih_scanned)
+        
+        #4 Constrained sampling with CREST
+        TS = '/mnt/c/Users/***REMOVED***pe672/Documents/SMC/Crespi/8_radek/3_unsubst_Z_pysis/ts_final_geometry.xyz'
+        for_sampling = mkbasedir_and_cp(mol, prefix='4_', suffix='_crest_sampling')
+        for_sampling = os.path.dirname(for_sampling)
+        TS_conformers = crest_constrained_sampling(for_sampling,
+                                                   path_to_TS=TS, 
+                                                   solvent='--alpb acetonitrile',
+                                                   angle=angle_CNC_line,
+                                                   optlev='--extreme')
