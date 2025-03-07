@@ -1,12 +1,16 @@
 [0-9]_*
 fragments
-structures
+structures*
 suppl
 .ipynb_checkpoints
 fragments_combiner
 geoms.tar.gz
 rdkit_is_a_torture.ipynb
+test.xyz
 C[0-9][0-9]H[0-9][0-9]*.xyz
 TS.yaml.backup
 unsubst_Z.xyz
 xtbpipe
+DEADJOE
+tests
+fragments_2
