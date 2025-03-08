@@ -270,14 +270,14 @@ if __name__== '__main__':
         shutil.copy(mol, mol_dir)
         os.chdir(mol_dir)
 
-        # #1 Optimization
-        # opt_dir = mkbasedir(mol, prefix='1_', suffix='_xtb_opt')
-        # optimized = xtb_opt(mol, dirname=opt_dir, solvent='--alpb acetonitrile', 
-        #                     optlev='--optlev extreme')
+        #1 Optimization
+        opt_dir = mkbasedir(mol, prefix='1_', suffix='_xtb_opt')
+        optimized = xtb_opt(mol, dirname=opt_dir, solvent='--alpb acetonitrile', 
+                            optlev='--optlev extreme')
          
         # Detecting dihedral	
         print(mol)
-        dihedral_nums = find_fragment_atoms(mol, 'FC=NC')
+        dihedral_nums = find_fragment_atoms(mol, 'C/C=N\C')
         dihedral_nums = list(dihedral_nums)
         dihedral_nums = list(map(lambda x: x+1, dihedral_nums))
         dihedral_line = ','.join(map(str,dihedral_nums))
@@ -285,33 +285,33 @@ if __name__== '__main__':
         angle_CNC_line = ','.join(map(str,dihedral_nums[1:]))
         angle_CNC_line = angle_CNC_line + ',auto'
         
-        # #2 Scan dihedral (rotation E to Z or Z to E)
-        # scan_dih_dir = mkbasedir(mol, prefix='2_', suffix='_xtb_scan_dih')
-        # dih_scanned = xtb_scan_rotation(optimized, dirname=scan_dih_dir, 
-        #                                 dihedral=dihedral_line_xtb, 
-        #                                 scan='0.0, 180.0, 18', solvent='--alpb acetonitrile')
+        #2 Scan dihedral (rotation E to Z or Z to E)
+        scan_dih_dir = mkbasedir(mol, prefix='2_', suffix='_xtb_scan_dih')
+        dih_scanned = xtb_scan_rotation(optimized, dirname=scan_dih_dir, 
+                                        dihedral=dihedral_line_xtb, 
+                                        scan='180.0, 0.0, 18', solvent='--alpb acetonitrile')
         
-        # #3 Second dia***REMOVED***reomer reopt
-        # m_opt_dir = mkbasedir(mol, prefix='3_', suffix='_xtb_scan_reopt')
-        # scan_reoptimized = xtb_opt(dih_scanned, dirname=m_opt_dir, solvent='--alpb acetonitrile',
-        #                             optlev='--optlev extreme')
+        #3 Second dia***REMOVED***reomer reopt
+        m_opt_dir = mkbasedir(mol, prefix='3_', suffix='_xtb_scan_reopt')
+        scan_reoptimized = xtb_opt(dih_scanned, dirname=m_opt_dir, solvent='--alpb acetonitrile',
+                                    optlev='--optlev extreme')
 
-        optimized = f'{mol_dir}/1_unsubst_Z_xtb_opt/xtbopt.xyz'
-        scan_reoptimized = f'{mol_dir}/3_unsubst_Z_xtb_scan_reopt/xtbopt.xyz'
-        TS = f'{mol_dir}/4_unsubst_Z_pysis/ts_final_geometry.xyz'
-        TS_conformers = f'{mol_dir}/5_unsubst_Z_TS_sampling/crest_conformers.xyz'
+        # optimized = f'{mol_dir}/1_unsubst_Z_xtb_opt/xtbopt.xyz'
+        # scan_reoptimized = f'{mol_dir}/3_unsubst_Z_xtb_scan_reopt/xtbopt.xyz'
+        # TS = f'{mol_dir}/4_unsubst_Z_pysis/ts_final_geometry.xyz'
+        # TS_conformers = f'{mol_dir}/5_unsubst_Z_TS_sampling/crest_conformers.xyz'
 
-        # #4 Pysis growing string to find TS between E and Z
-        # for_pysis = mkbasedir(mol, prefix='4_', suffix='_pysis')
-        # TS = pysis_gs('../TS.yaml', optimized, scan_reoptimized, dirname=for_pysis)
+        #4 Pysis growing string to find TS between E and Z
+        for_pysis = mkbasedir(mol, prefix='4_', suffix='_pysis')
+        TS = pysis_gs('../TS.yaml', optimized, scan_reoptimized, dirname=for_pysis)
         
-        # #5 Constrained sampling with CREST
-        # for_TS_sampling = mkbasedir(mol, prefix='5_', suffix='_TS_sampling', )
-        # TS_conformers = crest_constrained_sampling(TS,
-        #                                             dirname=for_TS_sampling, 
-        #                                             solvent='--alpb acetonitrile',
-        #                                             angle=angle_CNC_line,
-        #                                             optlev='--extreme')
+        #5 Constrained sampling with CREST
+        for_TS_sampling = mkbasedir(mol, prefix='5_', suffix='_TS_sampling', )
+        TS_conformers = crest_constrained_sampling(TS,
+                                                    dirname=for_TS_sampling, 
+                                                    solvent='--alpb acetonitrile',
+                                                    angle=angle_CNC_line,
+                                                    optlev='--extreme')
         
         #6 Pysis to reoptimize all TS conformers
         for_pysis_TS_reopt = mkbasedir(mol, prefix='6_', suffix='_pysis_TS_reopt')
