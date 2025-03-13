@@ -1,24 +1,16 @@
 #!/usr/bin/env python3
-import os, re, shutil, sys, argparse
+
+import os, re, shutil, sys
 f***REMOVED*** rdkit import Chem
-f***REMOVED*** rdkit.Chem import Draw, rdmolfiles, rdDetermineBonds
-import pdb
+f***REMOVED*** rdkit.Chem import rdmolfiles, rdDetermineBonds
+
 
 
 ### Installation section
 pysis_path = '/home/marlen/.local/bin/pysis'
 xtb_path = '/usr/local/bin/xtb'
 crest_path = '/usr/local/bin/crest3'
-
-### Filename parser
-parser = argparse.ArgumentParser(
-                    prog='TS_pipeline',
-                    description='Semi-automatically find TS for molecular switches',)
-
-parser.add_argument('filename', nargs='+', help='XYZ file to process')
-args = parser.parse_args()
-
-
+orca_path = 'orca.run'
 
 #%%
 ### Functions section
@@ -148,7 +140,7 @@ def pysis_gs(input_yaml, xyz_1, xyz_2, dirname='.'):
     os.chdir(initial_path)
     TS_path = f'{dirname}/ts_final_geometry.xyz'
     return TS_path
-def pysis_ts_reopt(input_yaml, xyz, dirname='.'):
+def pysis_ts_reopt(input_yaml, xyz, dirname = '.', concat_breaks=False):
     '''
     Calls pysis (pysisyphus) hessian-based method with .yaml input and geometry xyz1
         Arguments:
@@ -172,11 +164,36 @@ def pysis_ts_reopt(input_yaml, xyz, dirname='.'):
         shutil.copy(f'../{input_yaml}', '.')
         replace_in_file(f'{input_yaml}', 'xyzfile.xyz', f'{curr_TS_conformer}')
         os.sy***REMOVED***m(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
-        reoptimized_TSes.append(curr_TS_conformer)
+        reoptimized_TS_conformer = re.split('\.', curr_TS_conformer)[0] + '_reopt.xyz'
+        reoptimized_TSes.append(os.path.abspath(reoptimized_TS_conformer))
+        shutil.copy('ts_final_geometry.xyz', f'{reoptimized_TS_conformer}')
         os.chdir(init_path)
+    reoptimized_TSes = concatenate(f'{os.path.basename(os.getcwd())}_reoptimized_TSes.xyz', reoptimized_TSes, add_line_break=concat_breaks)
+    reoptimized_TSes = os.path.abspath(reoptimized_TSes)
     os.chdir(init_path_top)
-    # TS_path = f'{dirname}/ts_final_geometry.xyz'
     return reoptimized_TSes
+def concatenate(filename, list_of_files, add_line_break=False):
+    '''
+    Concatenates text files (optionally adds an empty line in the end of each chunk)
+    
+    Parameters
+    ----------
+    filename : string
+        Target file for concatenation
+    list_of_files : list of string
+        List of files for concatenation
+
+    Returns
+    -------
+    Path to the output file with contatenated text
+    '''
+    with open(filename, 'w') as file:
+        for chunk in list_of_files:
+            with open(chunk, 'r') as chunk:
+                to_append = chunk.read()
+                file.write(to_append)
+                if add_line_break: file.write('\n')
+    return filename
 def find_fragment_atoms(xyzfile, reference_smiles):
     """
     Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
@@ -253,7 +270,57 @@ def replace_in_file(file, find, replace):
         text = r.read().replace(find, replace)
     with open(file, "w") as w:
         w.write(text)
+def cregen(ensemble_file, extra_params='', dirname = '.', sorted_ensemble=False):
+    '''
+    Runs standalone CREST CREGEN procedure on an ensemble file
 
+    Parameters
+    ----------
+    ensemble_file : str
+        Ensemble file
+    extra_params : str
+        Additional parameters for CREGEN run (e.g. --ewin, --ethr; see CREST documentation https://crest-lab.github.io/crest-docs/page/documentation/keywords.html#ensemble-sorting-options)
+    sorted : bool
+        If True, returns .xyz.sorted file, otherwise just filtered crest_ensemble.xyz 
+    Returns
+    -------
+    Path to CREGENed file.
+
+    '''
+    ensemble_file, init_path = safe_dir(ensemble_file, dirname)
+    os.sy***REMOVED***m(f'{crest_path} {ensemble_file} --cregen {ensemble_file} {extra_params} | tee cregen_stdout.log')
+    basename = os.path.basename(ensemble_file)
+    basename = re.split(r'\.', basename)[0]
+    if sorted_ensemble == True:
+        resulting_ensemble = os.path.abspath(f'{basename}.xyz.sorted')
+    else:
+        resulting_ensemble = os.path.abspath('crest_ensemble.xyz')
+    return resulting_ensemble
+
+def orca(xyzfile, orca_template = 'orca.inp', dirname = '.'):
+    '''
+    Runs ORCA job based on provided xyzfile and orca.inp template.
+
+    Parameters
+    ----------
+    xyzfile : str
+        Input geometry file
+    orca_template : TYPE, optional
+        ORCA input template. The default is 'orca.inp'.
+    dirname : TYPE, optional
+        Directory in which to run the job. The default is '.'.
+
+    Returns
+    -------
+    Path to orca output.
+
+    '''
+    xyzfile, init_path = safe_dir(xyzfile, dirname)
+    basename = re.split(r'\.', xyzfile)[0]
+    orca_template = shutil.copy(orca_template, f'{basename}.inp')
+    replace_in_file(f'{basename}.inp', find, replace)
+    os.sy***REMOVED***m(f'{orca_path} {orca_template}')
+    
 #%%
 
 #######################################################################
@@ -261,62 +328,4 @@ def replace_in_file(file, find, replace):
 #######################################################################
 
 if __name__== '__main__':
-    mols=args.filename
-
-    for mol in mols:
-        start_dir = os.getcwd()
-        #### SET ignore_existing TO FALSE UNLESS DEBUGGING
-        mol_dir = mkbasedir(mol, ignore_existing=True)
-        shutil.copy(mol, mol_dir)
-        os.chdir(mol_dir)
-
-        #1 Optimization
-        opt_dir = mkbasedir(mol, prefix='1_', suffix='_xtb_opt')
-        optimized = xtb_opt(mol, dirname=opt_dir, solvent='--alpb acetonitrile', 
-                            optlev='--optlev extreme')
-         
-        # Detecting dihedral	
-        print(mol)
-        dihedral_nums = find_fragment_atoms(mol, 'C/C=N\C')
-        dihedral_nums = list(dihedral_nums)
-        dihedral_nums = list(map(lambda x: x+1, dihedral_nums))
-        dihedral_line = ','.join(map(str,dihedral_nums))
-        dihedral_line_xtb = dihedral_line + ',0.0'
-        angle_CNC_line = ','.join(map(str,dihedral_nums[1:]))
-        angle_CNC_line = angle_CNC_line + ',auto'
-        
-        #2 Scan dihedral (rotation E to Z or Z to E)
-        scan_dih_dir = mkbasedir(mol, prefix='2_', suffix='_xtb_scan_dih')
-        dih_scanned = xtb_scan_rotation(optimized, dirname=scan_dih_dir, 
-                                        dihedral=dihedral_line_xtb, 
-                                        scan='180.0, 0.0, 18', solvent='--alpb acetonitrile')
-        
-        #3 Second dia***REMOVED***reomer reopt
-        m_opt_dir = mkbasedir(mol, prefix='3_', suffix='_xtb_scan_reopt')
-        scan_reoptimized = xtb_opt(dih_scanned, dirname=m_opt_dir, solvent='--alpb acetonitrile',
-                                    optlev='--optlev extreme')
-
-        # optimized = f'{mol_dir}/1_unsubst_Z_xtb_opt/xtbopt.xyz'
-        # scan_reoptimized = f'{mol_dir}/3_unsubst_Z_xtb_scan_reopt/xtbopt.xyz'
-        # TS = f'{mol_dir}/4_unsubst_Z_pysis/ts_final_geometry.xyz'
-        # TS_conformers = f'{mol_dir}/5_unsubst_Z_TS_sampling/crest_conformers.xyz'
-
-        #4 Pysis growing string to find TS between E and Z
-        for_pysis = mkbasedir(mol, prefix='4_', suffix='_pysis')
-        TS = pysis_gs('../TS.yaml', optimized, scan_reoptimized, dirname=for_pysis)
-        
-        #5 Constrained sampling with CREST
-        for_TS_sampling = mkbasedir(mol, prefix='5_', suffix='_TS_sampling', )
-        TS_conformers = crest_constrained_sampling(TS,
-                                                    dirname=for_TS_sampling, 
-                                                    solvent='--alpb acetonitrile',
-                                                    angle=angle_CNC_line,
-                                                    optlev='--extreme')
-        
-        #6 Pysis to reoptimize all TS conformers
-        for_pysis_TS_reopt = mkbasedir(mol, prefix='6_', suffix='_pysis_TS_reopt')
-        reoptimized_TSes = pysis_ts_reopt('/mnt/c/Users/***REMOVED***pe672/Documents/GitHub/TS_pipeline/TS_reopt.yaml', TS_conformers, dirname = for_pysis_TS_reopt)
-        
-        # TS = pysis_ts_reopt('../TS_reopt.yaml', , scan_reoptimized, dirname=for_pysis)
-                
-        # os.chdir(start_dir)
+    print(' is module, not a script!')

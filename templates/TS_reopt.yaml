@@ -9,6 +9,8 @@ tsopt:
 irc:
  type: eulerpc
  rms_grad_thresh: 0.0001
+ forward: False
+ backward: False
 endopt:
 calc:
  type: xtb 
