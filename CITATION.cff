@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Peshkov"
+  given-names: "Roman Yu."
+  orcid: "https://orcid.org/0000-0002-6024-2031"
+- family-names: "Steen"
+  given-names: "Jorn D."
+  orcid: "https://orcid.org/0000-0002-7568-9370"
+- family-names: "Crespi"
+  given-names: "Stefano"
+  orcid: "https://orcid.org/0000-0002-0279-4903"
+title: "TS_pipeline"
+version: 1.0.0
+doi: 
+date-released: 
+url: "https://github.com/CrespiLab/TS_pipeline"
