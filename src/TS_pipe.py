@@ -311,6 +311,7 @@ def cregen(ensemble_file, extra_params='', dirname = '.', sorted_ensemble=False)
     else:
         resulting_ensemble = os.path.abspath('crest_ensemble.xyz')
     return resulting_ensemble
+
 def orca(xyzfile, orca_template = 'orca.inp', dirname = '.'):
     '''
     Runs ORCA job based on provided xyzfile and orca.inp template.

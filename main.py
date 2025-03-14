@@ -54,7 +54,7 @@ if __name__== '__main__':
         
 # ####### 3 Second dia***REMOVED***reomer reopt
 #         m_opt_dir = tsp.mkbasedir(mol, prefix='3_', suffix='_xtb_scan_reopt')
-#         scan_reoptimized = tsp.xtb_opt(dih_scanned, dirname=m_opt_dir, solvent='--alpb acetonitrile',
+        scan_reoptimized = tsp.xtb_opt(dih_scanned, dirname=m_opt_dir, solvent='--alpb acetonitrile',
 #                                     optlev='--optlev extreme')
 
 #         #4 Pysis growing string to find TS between E and Z
@@ -82,6 +82,8 @@ if __name__== '__main__':
         for_cregen = tsp.mkbasedir(mol, prefix = '7_', suffix = '_optmized_TS_cregen')
         cregened_ensemble = tsp.cregen(reoptimized_TSes, dirname = for_cregen)
         
+####### 8 Pysis IRC
+    
 ####### 8 ORCA wB97x-3c Hess + TSOpt + IRC
         for_orca = tsp.mkbasedir(mol, prefix = '8_', suffix = '_orca')
         

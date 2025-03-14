@@ -15,6 +15,6 @@ calc:
  type: xtb 
  pal: 8
  etemp: 1500
- alpb: acetonitrile
+# alpb: acetonitrile
  charge: 0
  mult: 1
