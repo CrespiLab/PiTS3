@@ -13,7 +13,7 @@ ts_pipe_dir = os.path.dirname(os.path.realpath(__file__))
 ### Filename parser
 parser = argparse.ArgumentParser(
                     prog='TS_pipeline',
-                    description='Semi-automatically find TS for molecular switches',)
+                    description='Semi-automatically finds TS for molecular switches',)
 
 parser.add_argument('filename', nargs='+', help='XYZ file to process')
 args = parser.parse_args()

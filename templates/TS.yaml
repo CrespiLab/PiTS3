@@ -20,11 +20,3 @@ irc:
  rms_grad_thresh: 0.0001
  forward: False
  backward: False
-endopt:
-calc:
- type: xtb 
- pal: 8
- etemp: 1500
- alpb: acetonitrile
- charge: 0
- mult: 1

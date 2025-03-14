@@ -95,13 +95,13 @@ $end'''
     return rotated_path
 def xtb_scan_inversion(input_file, dirname='.', model='--gfn2', solvent='', angle='0,0,0,0.0', scan='0,0,0', optlev=''):
     '''
+    INVERSION FOR MORE THAN 180 DEGREES IN PROBLEMATIC, THE FUNCTION IS NOT IN USE
     Run a scan along selected angle of molecule filename.xyz with xtb at gfn2 level of theory
         Arguments:
     path         - path to XYZ geometry file
         Returns:
     inverted_path - XYZ geometry of alternative dia***REMOVED***reomer
     '''
-# dihedral: 11,10,8,7,180.0
     scan_input=f'''$constrain
  force constant=5.00
  angle: {angle}
@@ -140,7 +140,7 @@ def pysis_gs(input_yaml, xyz_1, xyz_2, dirname='.'):
     os.chdir(initial_path)
     TS_path = f'{dirname}/ts_final_geometry.xyz'
     return TS_path
-def pysis_ts_reopt(input_yaml, xyz, dirname = '.', concat_breaks=False):
+def pysis_ts_reopt(input_yaml, xyz, dirname = '.', concat_breaks=False, irc=False):
     '''
     Calls pysis (pysisyphus) hessian-based method with .yaml input and geometry xyz1
         Arguments:
@@ -163,13 +163,28 @@ def pysis_ts_reopt(input_yaml, xyz, dirname = '.', concat_breaks=False):
         os.chdir(curr_conf_dir)
         shutil.copy(f'../{input_yaml}', '.')
         replace_in_file(f'{input_yaml}', 'xyzfile.xyz', f'{curr_TS_conformer}')
+        if irc == True:
+            replace_in_file(f'{input_yaml}', 'forward: False', 'forward: True')
+            replace_in_file(f'{input_yaml}', 'backward: False', '''endopt:
+            calc:
+             type: xtb 
+             pal: 8
+             etemp: 1500
+             alpb: acetonitrile
+             charge: 0
+             mult: 1''')
         os.sy***REMOVED***m(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
         reoptimized_TS_conformer = re.split('\.', curr_TS_conformer)[0] + '_reopt.xyz'
+        # breakpoint()
+        if irc == False:
+            test_shutil = shutil.copy('ts_final_geometry.xyz', f'{reoptimized_TS_conformer}')
+        if irc == True:
+            shutil.copy('left_ts_right_geoms.trj', f'{reoptimized_TS_conformer}_irc.xyz')
         reoptimized_TSes.append(os.path.abspath(reoptimized_TS_conformer))
-        shutil.copy('ts_final_geometry.xyz', f'{reoptimized_TS_conformer}')
         os.chdir(init_path)
-    reoptimized_TSes = concatenate(f'{os.path.basename(os.getcwd())}_reoptimized_TSes.xyz', reoptimized_TSes, add_line_break=concat_breaks)
-    reoptimized_TSes = os.path.abspath(reoptimized_TSes)
+    if irc == False:
+        reoptimized_TSes = concatenate(f'{os.path.basename(os.getcwd())}_reoptimized_TSes.xyz', reoptimized_TSes, add_line_break=concat_breaks)
+        reoptimized_TSes = os.path.abspath(reoptimized_TSes)
     os.chdir(init_path_top)
     return reoptimized_TSes
 def concatenate(filename, list_of_files, add_line_break=False):
@@ -296,7 +311,6 @@ def cregen(ensemble_file, extra_params='', dirname = '.', sorted_ensemble=False)
     else:
         resulting_ensemble = os.path.abspath('crest_ensemble.xyz')
     return resulting_ensemble
-
 def orca(xyzfile, orca_template = 'orca.inp', dirname = '.'):
     '''
     Runs ORCA job based on provided xyzfile and orca.inp template.

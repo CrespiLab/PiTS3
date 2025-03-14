@@ -1,16 +1,26 @@
 geom:
  type: dlc
- fn: [xyzfile.xyz]
+ fn: [geom_1.xyz, geom_2.xyz]
+preopt:
+cos:
+ type: gs
+ max_nodes: 18
+ climb: True
+opt:
+ type: string
+ align: False
+ max_cycles: 20
 tsopt:
  type: rsirfo
  do_hess: True
  thresh: gau
- hessian_recalc: 1
+ hessian_recalc: 3
 irc:
  type: eulerpc
  rms_grad_thresh: 0.0001
  forward: False
  backward: False
+endopt:
 calc:
  type: xtb 
  pal: 8
