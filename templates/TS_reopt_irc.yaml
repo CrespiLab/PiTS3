@@ -1,0 +1,21 @@
+geom:
+ type: dlc
+ fn: [xyzfile.xyz]
+tsopt:
+ type: rsirfo
+ do_hess: True
+ thresh: gau
+ hessian_recalc: 1
+irc:
+ type: eulerpc
+ rms_grad_thresh: 0.0001
+ forward: True
+ backward: True
+endopt:
+calc:
+ type: xtb 
+ pal: 8
+ etemp: 1500
+# alpb: acetonitrile
+ charge: 0
+ mult: 1
