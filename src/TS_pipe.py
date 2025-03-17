@@ -2,7 +2,7 @@
 
 import os, re, shutil, sys
 f***REMOVED*** rdkit import Chem
-f***REMOVED*** rdkit.Chem import rdmolfiles, rdDetermineBonds
+f***REMOVED*** rdkit.Chem import rdmolfiles, rdDetermineBonds, rdMolTransforms
 
 
 
@@ -283,6 +283,8 @@ def crest_constrained_sampling(input_file,
                                solvent='', 
                                angle='0,0,0,0.0', 
                                optlev='', 
+                               len='',
+                               mdlen='',
                                cinp='constraints.inp'):
     '''
     Runs CREST conformational sampling with constrain (predefined in the function).
@@ -292,11 +294,16 @@ def crest_constrained_sampling(input_file,
     constraint_input=f'''$constrain
  force constant=5.00
  angle: {angle}
- dihedral: 5,7,8,10
 $end'''
+    if len(angle) > 1:
+        constraint_input=f'''$constrain
+ force constant=5.00
+ angle: {angle[0]}
+ angle: {angle[1]}
+    $end'''
     with open('constraints.inp','w') as file:
         file.write(constraint_input)
-    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} | tee xtb_TS_conf_sampling_stdout.log'
+    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {len} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
     os.sy***REMOVED***m(crest_line)
     TS_conformers_path = f'{dirname}/crest_conformers.xyz'
     os.chdir(initial_path)
@@ -358,7 +365,7 @@ def cregen(ensemble_file, extra_params='', dirname = '.', sorted_ensemble=False)
         resulting_ensemble = os.path.abspath('crest_ensemble.xyz')
     os.chdir(init_path)
     return resulting_ensemble
-def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname = '.'):
+def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname = '.', control_ang=[], control_ang_range=[]):
     '''
     Runs ORCA compound job to reoptimize TS and IRC endpoints. DOES NOT DO DFT IRC!
 
@@ -381,6 +388,12 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
     basename = irc_dict['basename']
     orca_template = shutil.copy(orca_template, f'{basename}.inp')
     for conformer, xyzs in irc_dict['conformers'].items():
+        if control_ang:
+            control_ang_value = get_angle(xyzs['TS'], *control_ang)
+            control_ang_range.sort()
+            if control_ang_range[0] < control_ang_value < control_ang_range[1]:
+                print(f'Angle {control_ang} is in undesired range {control_ang_range}, skipping {conformer}')
+                continue
         curr_conf_dir = re.split(r'\.', conformer)[0]
         init_path = os.getcwd()
         os.mkdir(curr_conf_dir)
@@ -396,11 +409,78 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
         os.sy***REMOVED***m(f'orca.run {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
         os.chdir(init_path)
     os.chdir(init_path_top)
+def get_dihedral(xyzfile, atom1, atom2, atom3, atom4):
+    '''
+    Measures dihedral angle in an .xyz molecule.
     
+    Parameters
+    ----------
+    xyzfile : str
+        xyz geometry file.
+    atom1, atom2, atom3, atom4 : ints
+        "Natural" atom numbers (with numbering starting at 1!)
 
+    Returns
+    -------
+    Dihedral in degrees.
+
+    '''
+    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+    atoms = list(map(lambda x: x-1, [atom1, atom2, atom3, atom4]))
+    dihedral = rdMolTransforms.GetDihedralDeg(mol.GetConformer(), *atoms)
+    return dihedral
+def get_angle(xyzfile, atom1, atom2, atom3):
+    '''
+    Measures angle in an .xyz molecule.
+    
+    Parameters
+    ----------
+    xyzfile : str
+        xyz geometry file.
+    atom1, atom2, atom3 : ints
+        "Natural" atom numbers (with numbering starting at 1!)
+
+    Returns
+    -------
+    Dihedral in degrees.
+
+    '''
+    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+    atoms = list(map(lambda x: x-1, [atom1, atom2, atom3]))
+    angle = rdMolTransforms.GetAngleDeg(mol.GetConformer(), *atoms)
+    return angle
 #######################################################################
 #######################################################################
 #######################################################################
 
 if __name__== '__main__':
     print(' is module, not a script!')
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

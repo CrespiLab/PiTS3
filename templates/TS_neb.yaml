@@ -4,8 +4,6 @@ geom:
 preopt:
 cos:
  type: neb
- max_nodes: 50
- climb: True
 opt:
  type: lbfgs
  align: False
