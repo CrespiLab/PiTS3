@@ -82,8 +82,8 @@ if __name__== '__main__':
                                   xyz = cregened_ensemble,
                                   dirname = for_pysis_irc,)
 ####### 9 ORCA wB97x-3c Hess + TSOpt + IRC
-        for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
-        tsp.orca_three_points(ircs,
-                              orca_template = f'{ts_pipe_dir}/templates/orca_three_points.inp',
-                              dirname = for_orca)
-        os.chdir(start_dir)
+        # for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
+        # tsp.orca_three_points(ircs,
+        #                       orca_template = f'{ts_pipe_dir}/templates/orca_three_points.inp',
+        #                       dirname = for_orca)
+        # os.chdir(start_dir)

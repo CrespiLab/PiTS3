@@ -103,28 +103,29 @@ $end'''
     rotated_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return rotated_path
-# def xtb_scan_inversion(input_file, dirname='.', model='--gfn2', solvent='', angle='0,0,0,0.0', scan='0,0,0', optlev=''):
-#     '''
-#     INVERSION FOR MORE THAN 180 DEGREES IN PROBLEMATIC, THE FUNCTION IS NOT IN USE
-#     Run a scan along selected angle of molecule filename.xyz with xtb at gfn2 level of theory
-#         Arguments:
-#     path         - path to XYZ geometry file
-#         Returns:
-#     inverted_path - XYZ geometry of alternative dia***REMOVED***reomer
-#     '''
-#     scan_input=f'''$constrain
-#  force constant=5.00
-#  angle: {angle}
-# $scan
-#  1: {scan}
-# $end'''
-#     input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
-#     with open('scan.inp','w') as file:
-#         file.write(scan_input)
-#     os.sy***REMOVED***m(f'{xtb_path} {path} --opt --input scan.inp {model} {solvent} {optlev} | tee {path}_xtb_angle_scan.log')
-#     inverted_path = dir + '/xtbopt.xyz'
-#     os.chdir(initial_path)
-#     return inverted_path
+def xtb_scan_inversion(input_file, dirname='.', model='--gfn2', solvent='',
+                       angle='0,0,0,0.0', scan='0,0,0', optlev=''):
+    '''
+    INVERSION FOR MORE THAN 180 DEGREES IS PROBLEMATIC
+    Run a scan along selected angle of molecule filename.xyz with xtb at gfn2 level of theory
+        Arguments:
+    path         - path to XYZ geometry file
+        Returns:
+    inverted_path - XYZ geometry of alternative dia***REMOVED***reomer
+    '''
+    scan_input=f'''$constrain
+ force constant=5.00
+ angle: {angle}
+$scan
+ 1: {scan}
+$end'''
+    input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
+    with open('scan.inp','w') as file:
+        file.write(scan_input)
+    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} | tee xtb_angle_scan.log')
+    inverted_path = os.path.abspath('xtbopt.xyz')
+    os.chdir(initial_path)
+    return inverted_path
 def pwd(prnt=False):
     '''
     Just python-wrapped pwd
@@ -391,7 +392,8 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
         replace_in_file(curr_orca_template, '%irc_F.xyz%', 'forward_end_opt.xyz')
         replace_in_file(curr_orca_template, '%irc_B.xyz%', 'backward_end_opt.xyz')
         replace_in_file(curr_orca_template, 'orca_Compound_1.hess', f'{basename}_Compound_1.hess')
-        os.sy***REMOVED***m(f'orca.run {curr_orca_template}')
+        orca_basename = re.split(r'\.', os.bath.basename(curr_orca_template))[0]
+        os.sy***REMOVED***m(f'orca.run {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
         os.chdir(init_path)
     os.chdir(init_path_top)
     
