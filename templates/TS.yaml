@@ -4,17 +4,20 @@ geom:
 preopt:
 cos:
  type: gs
- max_nodes: 18
+ max_nodes: 30
  climb: True
 opt:
  type: string
  align: False
- max_cycles: 20
+ max_cycles: 15
 tsopt:
- type: rsirfo
+ type: rsprfo
  do_hess: True
  thresh: gau
- hessian_recalc: 3
+ max_cycles: 250
+ hessian_recalc: 1
+ trust_max: 0.1
+ trust_min: 0.01 
 irc:
  type: eulerpc
  rms_grad_thresh: 0.0001

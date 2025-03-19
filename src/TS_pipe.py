@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
 import os, re, shutil, sys
+f***REMOVED*** openbabel import pybel
 f***REMOVED*** rdkit import Chem
 f***REMOVED*** rdkit.Chem import rdmolfiles, rdDetermineBonds, rdMolTransforms
 
 
 
 ### Installation section
-pysis_path = '/home/marlen/.local/bin/pysis'
-xtb_path = '/usr/local/bin/xtb'
-crest_path = '/usr/local/bin/crest3'
+pysis_path = 'pysis'
+xtb_path = 'xtb'
+crest_path = 'crest3'
 orca_path = 'orca.run'
 
 #%%
@@ -91,7 +92,7 @@ def xtb_scan_rotation(input_file, dirname='.', model='--gfn2', solvent='',
     rotated_path - XYZ geometry of alternative dia***REMOVED***reomer
     '''
     scan_input=f'''$constrain
- force constant=0.05
+ force constant=0.50
  dihedral: {dihedral}
 $scan
  1: {scan}
@@ -255,7 +256,7 @@ def concatenate(filename, list_of_files, add_line_break=False):
                 file.write(to_append)
                 if add_line_break: file.write('\n')
     return filename
-def find_fragment_atoms(xyzfile, reference_smiles):
+def find_fragment_atoms_old(xyzfile, reference_smiles, chrg=0):
     """
     Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
 
@@ -267,9 +268,9 @@ def find_fragment_atoms(xyzfile, reference_smiles):
     :param reference_fragment: RDKit molecule representing the common fragment
     :return: List of atom indices that match the fragment
     """
-    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
-    rdDetermineBonds.DetermineConnectivity(mol)
-    Chem.rdDetermineBonds.DetermineBondOrders(mol)
+    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile, )
+    rdDetermineBonds.DetermineConnectivity(mol, charge=chrg)
+    rdDetermineBonds.DetermineBondOrders(mol, charge=chrg)
     Chem.SanitizeMol(mol)
     Chem.Kekulize(mol)
     reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
@@ -277,13 +278,74 @@ def find_fragment_atoms(xyzfile, reference_smiles):
     if not matches:
         raise ValueError("Reference fragment not found in the molecule!")
     return matches[0]  # Return the first match    
+def find_fragment_atoms(xyzfile, reference_smiles, chrg=0):
+    """
+    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Uses openbabel to generate mol object with correct bond orders.
+
+    """
+    mol = next(pybel.readfile('xyz', xyzfile))
+    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'))
+    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    matches = mol.GetSubstructMatches(reference_fragment)
+    if not matches:
+        raise ValueError("Reference fragment not found in the molecule!")
+    if len(matches) > 1:
+        raise ValueError("Selected reference fragment (--dihedral) is not unique in the molecule!")
+    return matches[0]  # Return the first match    
+
+def find_fragment_atoms_with_hydrogens(xyzfile, reference_smiles, chrg=0):
+    """
+    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Uses openbabel to generate mol object with correct bond orders.
+
+    """
+    mol = next(pybel.readfile('xyz', xyzfile))
+    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), removeHs = False)
+    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    matches = mol.GetSubstructMatches(reference_fragment)
+    if not matches:
+        raise ValueError("Reference fragment not found in the molecule!")
+    if len(matches) > 1:
+        raise ValueError("Selected reference fragment (--dihedral) is not unique in the molecule!")
+    key_atoms = [mol.GetAtomWithIdx(atom_index) for atom_index in matches[0][1:3]]
+    hydrogen_indices = []
+    for atom in key_atoms:
+        hydrogen_idxs = [neighbor.GetIdx() for neighbor in atom.GetNeighbors() if neighbor.GetSymbol() == "H"]
+        hydrogen_indices.extend(hydrogen_idxs)
+    all_atoms = hydrogen_indices + list(matches[0])
+    return all_atoms    
+    
+def find_fragment_atoms_ibo(xyzfile, reference_smiles, chrg=0):
+    """
+    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    IGNORES BOND ORDERS
+
+    Fixes:
+    - Uses RDKit's DetermineConnectivity() to assign bonds to XYZ molecules.
+    - Sanitizes the molecule to ensure valence is properly assigned.
+    
+    :param mol: RDKit molecule
+    :param reference_fragment: RDKit molecule representing the common fragment
+    :return: List of atom indices that match the fragment
+    """
+    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile, )
+    rdDetermineBonds.DetermineConnectivity(mol, charge=chrg)
+    Chem.SanitizeMol(mol)
+    Chem.Kekulize(mol)
+    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    matches = mol.GetSubstructMatches(reference_fragment)
+    if not matches:
+        raise ValueError("Reference fragment not found in the molecule!")
+    return matches[0]  # Return the first match    
+    
 def crest_constrained_sampling(input_file,
                                dirname='.',
                                model='--gfn2', 
                                solvent='', 
-                               angle='0,0,0,0.0', 
+                               constrain_atoms=[],
                                optlev='', 
-                               len='',
+                               dlen='',
                                mdlen='',
                                cinp='constraints.inp'):
     '''
@@ -291,19 +353,51 @@ def crest_constrained_sampling(input_file,
     '''
     input_file, initial_path = safe_dir(input_file, dirname)    
     os.chdir(dirname)
+    constrain_atoms = list(map(lambda x: x+1, constrain_atoms))
+    constrain_line = ','.join(map(str,constrain_atoms))
+    constraint_input=f'''$constrain
+ force constant=0.50
+ atoms: {constrain_line}
+$end'''
+    with open('constraints.inp','w') as file:
+        file.write(constraint_input)
+    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
+    os.sy***REMOVED***m(crest_line)
+    TS_conformers_path = f'{dirname}/crest_conformers.xyz'
+    os.chdir(initial_path)
+    return TS_conformers_path
+def crest_constrained_sampling_old(input_file,
+                                  dirname='.',
+                                  model='--gfn2', 
+                                  solvent='', 
+                                  angles=[],
+                                  dihedral=[],
+                                  optlev='', 
+                                  dlen='',
+                                  mdlen='',
+                                  cinp='constraints.inp'):
+    '''
+    Runs CREST conformational sampling with constrain (predefined in the function).
+    '''
+    input_file, initial_path = safe_dir(input_file, dirname)    
+    os.chdir(dirname)
+    dihedral = ','.join(map(str,dihedral))
+    dihedral = dihedral + ', auto'
     constraint_input=f'''$constrain
  force constant=5.00
- angle: {angle}
+ dihedral: {dihedral}
+ angle: {angles[0]}
 $end'''
-    if len(angle) > 1:
+    if len(angles) > 1:
         constraint_input=f'''$constrain
  force constant=5.00
- angle: {angle[0]}
- angle: {angle[1]}
+ dihedral: {dihedral}
+ angle: {angles[0]}
+ angle: {angles[1]}
     $end'''
     with open('constraints.inp','w') as file:
         file.write(constraint_input)
-    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {len} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
+    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
     os.sy***REMOVED***m(crest_line)
     TS_conformers_path = f'{dirname}/crest_conformers.xyz'
     os.chdir(initial_path)
@@ -365,7 +459,9 @@ def cregen(ensemble_file, extra_params='', dirname = '.', sorted_ensemble=False)
         resulting_ensemble = os.path.abspath('crest_ensemble.xyz')
     os.chdir(init_path)
     return resulting_ensemble
-def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname = '.', control_ang=[], control_ang_range=[]):
+def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname = '.',
+                      control_ang=[], control_ang_range=[],
+                      control_dih=[], control_dih_range=[]):
     '''
     Runs ORCA compound job to reoptimize TS and IRC endpoints. DOES NOT DO DFT IRC!
 
@@ -394,6 +490,12 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
             if control_ang_range[0] < control_ang_value < control_ang_range[1]:
                 print(f'Angle {control_ang} is in undesired range {control_ang_range}, skipping {conformer}')
                 continue
+        if control_dih:
+            control_dih_value = get_dihedral(xyzs['TS'], *control_dih)
+            control_dih_range.sort()
+            if control_dih_range[0] < control_dih_value < control_dih_range[1]:
+                print(f'Angle {control_dih} is in undesired range {control_dih_range}, skipping {conformer}')
+                continue
         curr_conf_dir = re.split(r'\.', conformer)[0]
         init_path = os.getcwd()
         os.mkdir(curr_conf_dir)
@@ -405,7 +507,7 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
         replace_in_file(curr_orca_template, '%irc_F.xyz%', 'forward_end_opt.xyz')
         replace_in_file(curr_orca_template, '%irc_B.xyz%', 'backward_end_opt.xyz')
         replace_in_file(curr_orca_template, 'orca_Compound_1.hess', f'{basename}_Compound_1.hess')
-        orca_basename = re.split(r'\.', os.bath.basename(curr_orca_template))[0]
+        orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
         os.sy***REMOVED***m(f'orca.run {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
         os.chdir(init_path)
     os.chdir(init_path_top)

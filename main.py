@@ -2,11 +2,12 @@
 
 import os, shutil, argparse
 import src.TS_pipe as tsp
+import pdb
 
 ### Installation section
-pysis_path = '/home/marlen/.local/bin/pysis'
-xtb_path = '/usr/local/bin/xtb'
-crest_path = '/usr/local/bin/crest3'
+pysis_path = 'pysis'
+xtb_path = 'xtb'
+crest_path = 'crest3'
 orca_path = 'orca.run'
 ts_pipe_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -16,6 +17,7 @@ parser = argparse.ArgumentParser(
                     description='Semi-automatically finds TS for molecular switches',)
 
 parser.add_argument('filename', nargs='+', help='XYZ file to process')
+parser.add_argument('-d', '--dihedral', nargs='?', help='XYZ file to process')
 args = parser.parse_args()
 
 #%%
@@ -25,7 +27,7 @@ if __name__== '__main__':
 
     for mol in mols:
         start_dir = os.getcwd()
-        mol_dir = tsp.mkbasedir(mol)
+        mol_dir = tsp.mkbasedir(mol, ignore_existing=True)
         shutil.copy(mol, mol_dir)
         os.chdir(mol_dir)
 
@@ -34,24 +36,31 @@ if __name__== '__main__':
         optimized = tsp.xtb_opt(mol, 
                                 dirname=opt_dir,  
                                 optlev='--optlev extreme')
-#                                solvent='--alpb acetonitrile',)
+##                                solvent='--alpb acetonitrile',)
          
-######## Detecting dihedral	
-        dihedral_nums = tsp.find_fragment_atoms(mol, 'C/C=N\C')
-        dihedral_nums = list(map(lambda x: x+1, dihedral_nums))
+####### Detecting dihedral	
+#        dihedral_nums = tsp.find_fragment_atoms(mol, 'C/C=N\C')
+### FOR NITRO-CONTAINING IMINES
+        if not args.dihedral:
+            ref_smiles = 'C/C=N\C'
+        else:
+            ref_smiles = args.dihedral
+#        optimized = '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/results/new_imines/C13H11N/1_C13H11N_xtb_opt/xtbopt.xyz'
+        dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, ref_smiles)))
         opt_dih_value = tsp.get_dihedral(optimized, *dihedral_nums)
         dihedral_line_xtb = ','.join(map(str,dihedral_nums))
-        if opt_dih_value < 90:
+        if abs(opt_dih_value) < 90:
             dihedral_line_xtb += ',0.0'
             scan_line = '0.0, 180.0, 18'
         else:
             dihedral_line_xtb += ',180.0'
             scan_line = '180.0, 0.0, 18'
-        angle_CNC = list(map(str,dihedral_nums[1:]))
-        angle_NCC = list(map(str,dihedral_nums[0:3]))
-        angle_CNC_line = ','.join(angle_CNC) + ',auto'
-        angle_NCC_line = ','.join(angle_NCC) + ',auto'
-        
+        angle_CNC_nums = dihedral_nums[1:]
+##        angle_CNC = list(map(str,dihedral_nums[1:]))
+##        angle_NCC = list(map(str,dihedral_nums[0:3]))
+##        angle_CNC_line = ','.join(angle_CNC) + ',auto'
+##        angle_NCC_line = ','.join(angle_NCC) + ',auto'
+#        
 ####### 2 Scan dihedral (rotation E to Z or Z to E)
         scan_dih_dir = tsp.mkbasedir(mol, prefix='2_', suffix='_xtb_scan_dih')
         dih_scanned = tsp.xtb_scan_rotation(optimized, 
@@ -72,14 +81,17 @@ if __name__== '__main__':
                           optimized, 
                           scan_reoptimized, 
                           dirname=for_pysis)
-        
+
+#        TS = '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/results/new_imines/C13H11N/4_C13H11N_pysis/ts_final_geometry.xyz'
 ####### 5 Constrained sampling with CREST
+        constraint = tsp.find_fragment_atoms_with_hydrogens(optimized, ref_smiles)
+#        breakpoint()
         for_TS_sampling = tsp.mkbasedir(mol, prefix='5_', suffix='_TS_sampling', )
         TS_conformers = tsp.crest_constrained_sampling(TS,
                                                        dirname=for_TS_sampling, 
-                                                       angle=[angle_CNC_line, angle_NCC_line],
+                                                       constrain_atoms=constraint,
                                                        optlev='--extreme',)
-####################################################### len='--len x3', mdlen='--mdlen x3')
+######################################################  dlen='--len x3', mdlen='--mdlen x3')
                                                       # solvent='--alpb acetonitrile',
 ####### 6 Pysis to reoptimize all TS conformers
         for_pysis_TS_reopt = tsp.mkbasedir(mol, prefix='6_', suffix='_pysis_TS_reopt')
@@ -102,9 +114,9 @@ if __name__== '__main__':
         for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
         tsp.orca_three_points(ircs,
                               orca_template = f'{ts_pipe_dir}/templates/orca_three_points.inp',
-                              dirname = for_orca,
-                              control_ang = ang_CNC,
-                              control_ang_range = [100,140])
+                              dirname = for_orca,)
+#                              control_ang = angle_CNC_nums,
+#                              control_ang_range = [100,140])
         os.chdir(start_dir)
         
         
