@@ -4,7 +4,7 @@ geom:
 preopt:
 cos:
  type: gs
- max_nodes: 30
+ max_nodes: 40
  climb: True
 opt:
  type: string

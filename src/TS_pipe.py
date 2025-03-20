@@ -149,6 +149,7 @@ def pysis_gs(input_yaml, xyz_1, xyz_2, dirname='.'):
     xyz_2 = safe_dir(xyz_2, dirname, rename='geom_2.xyz')[0]
     os.chdir(dirname)
     os.sy***REMOVED***m(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
+    shutil.rmtree('qm_calcs')
     os.chdir(initial_path)
     TS_path = f'{dirname}/ts_final_geometry.xyz'
     return TS_path
@@ -182,6 +183,7 @@ def pysis_ts_reopt(input_yaml, xyz, dirname = '.', concat_breaks=False, irc=Fals
             replace_in_file(f'{input_yaml}', 'forward: False', 'forward: True')
             replace_in_file(f'{input_yaml}', 'backward: False', '''backward: True\nendopt:''')
         os.sy***REMOVED***m(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
+        shutil.rmtree('qm_calcs')
         reoptimized_TS_conformer = re.split('\.', curr_TS_conformer)[0] + '_reopt.xyz'
         # breakpoint()
         if irc == False:
@@ -226,6 +228,7 @@ def pysis_ts_irc(input_yaml, xyz, dirname = '.'):
         shutil.copy(f'../{input_yaml}', '.')
         replace_in_file(f'{input_yaml}', 'xyzfile.xyz', f'{curr_TS_conformer}')
         os.sy***REMOVED***m(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
+        shutil.rmtree('qm_calcs')
         reoptimized_TS_conformer = re.split('\.', curr_TS_conformer)[0] + '_reopt.xyz'
         # breakpoint()
         reoptimized_TSes['conformers'][f'{reoptimized_TS_conformer}'] = {'backward' : os.path.abspath('backward_end_opt.xyz'),
@@ -509,6 +512,8 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
         replace_in_file(curr_orca_template, 'orca_Compound_1.hess', f'{basename}_Compound_1.hess')
         orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
         os.sy***REMOVED***m(f'orca.run {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
+        for f in glob.glob('cregened*tmp*'):
+            os.remove(f)
         os.chdir(init_path)
     os.chdir(init_path_top)
 def get_dihedral(xyzfile, atom1, atom2, atom3, atom4):
