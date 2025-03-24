@@ -35,7 +35,8 @@ if __name__== '__main__':
         opt_dir = tsp.mkbasedir(mol, prefix='1_', suffix='_xtb_opt')
         optimized = tsp.xtb_opt(mol, 
                                 dirname=opt_dir,  
-                                optlev='--optlev extreme')
+                                optlev='--optlev extreme',
+                                etemp='--etemp 1500')
 ##                                solvent='--alpb acetonitrile',)
          
 ####### Detecting dihedral	
@@ -46,7 +47,7 @@ if __name__== '__main__':
         else:
             ref_smiles = args.dihedral
 #        optimized = '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/results/new_imines/C13H11N/1_C13H11N_xtb_opt/xtbopt.xyz'
-        dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, ref_smiles)))
+        dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, ref_smiles, sanitize = False)))
         opt_dih_value = tsp.get_dihedral(optimized, *dihedral_nums)
         dihedral_line_xtb = ','.join(map(str,dihedral_nums))
         if abs(opt_dih_value) < 90:
@@ -66,25 +67,27 @@ if __name__== '__main__':
         dih_scanned = tsp.xtb_scan_rotation(optimized, 
                                             dirname=scan_dih_dir, 
                                             dihedral=dihedral_line_xtb, 
-                                            scan=scan_line,)# solvent='--alpb acetonitrile')
+                                            scan=scan_line,
+                                            etemp='--etemp 1500',)# solvent='--alpb acetonitrile')
         
 ####### 3 Second dia***REMOVED***reomer reopt
         m_opt_dir = tsp.mkbasedir(mol, prefix='3_', suffix='_xtb_scan_reopt')
         scan_reoptimized = tsp.xtb_opt(dih_scanned, 
                                        dirname=m_opt_dir,
-                                       optlev='--optlev extreme',)
+                                       optlev='--optlev extreme',
+                                       etemp='--etemp 1500',)
 #                                    solvent='--alpb acetonitrile',)
 
 ####### 4 Pysis growing string to find TS between E and Z
         for_pysis = tsp.mkbasedir(mol, prefix='4_', suffix='_pysis')
-        TS = tsp.pysis_gs(f'{ts_pipe_dir}/templates/TS.yaml',
+        TS = tsp.pysis_gs(f'{ts_pipe_dir}/templates/TS_10_nodes.yaml',
                           optimized, 
                           scan_reoptimized, 
                           dirname=for_pysis)
 
 #        TS = '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/results/new_imines/C13H11N/4_C13H11N_pysis/ts_final_geometry.xyz'
 ####### 5 Constrained sampling with CREST
-        constraint = tsp.find_fragment_atoms_with_hydrogens(optimized, ref_smiles)
+        constraint = tsp.find_fragment_atoms_with_hydrogens(optimized, ref_smiles, sanitize=False)
 #        breakpoint()
         for_TS_sampling = tsp.mkbasedir(mol, prefix='5_', suffix='_TS_sampling', )
         TS_conformers = tsp.crest_constrained_sampling(TS,

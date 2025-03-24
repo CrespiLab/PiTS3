@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, re, shutil, sys
+import os, re, shutil, sys, glob
 f***REMOVED*** openbabel import pybel
 f***REMOVED*** rdkit import Chem
 f***REMOVED*** rdkit.Chem import rdmolfiles, rdDetermineBonds, rdMolTransforms
@@ -69,7 +69,7 @@ def ***REMOVED***p():
     def next_number():
         print('Step ', next(gen), ' of TS_pipe script')  # Automatically print the next number
     return next_number  # Return the function that prints the next number
-def xtb_opt(input_file, dirname='.', model='--gfn2', solvent='', optlev=''):
+def xtb_opt(input_file, dirname='.', model='--gfn2', solvent='', optlev='', etemp=''):
     '''
     Optimizes molecule filename.xyz with xtb at gfn2 level of theory
         Arguments:
@@ -78,12 +78,12 @@ def xtb_opt(input_file, dirname='.', model='--gfn2', solvent='', optlev=''):
     opt_path - XYZ geometry of optimized molecule
     '''
     input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
-    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt {model} {solvent} {optlev} | tee xtb_opt_stdout.log')
+    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt {model} {solvent} {optlev} {etemp} | tee xtb_opt_stdout.log')
     opt_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return opt_path
 def xtb_scan_rotation(input_file, dirname='.', model='--gfn2', solvent='',
-                      dihedral='0,0,0,0,0', scan='0,0,0', optlev=''):
+                      dihedral='0,0,0,0,0', scan='0,0,0', optlev='', etemp=''):
     '''
     Run a scan along selected dihedral of molecule filename.xyz with xtb at gfn2 level of theory
         Arguments:
@@ -100,7 +100,7 @@ $end'''
     input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
     with open('scan.inp','w') as file:
         file.write(scan_input)
-    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} | tee xtb_dih_scan_stdout.log')
+    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} {etemp} | tee xtb_dih_scan_stdout.log')
     rotated_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return rotated_path
@@ -281,14 +281,14 @@ def find_fragment_atoms_old(xyzfile, reference_smiles, chrg=0):
     if not matches:
         raise ValueError("Reference fragment not found in the molecule!")
     return matches[0]  # Return the first match    
-def find_fragment_atoms(xyzfile, reference_smiles, chrg=0):
+def find_fragment_atoms(xyzfile, reference_smiles, chrg=0, sanitize=True):
     """
     Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
     Uses openbabel to generate mol object with correct bond orders.
 
     """
     mol = next(pybel.readfile('xyz', xyzfile))
-    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'))
+    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), sanitize=sanitize)
     reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
     matches = mol.GetSubstructMatches(reference_fragment)
     if not matches:
@@ -296,15 +296,14 @@ def find_fragment_atoms(xyzfile, reference_smiles, chrg=0):
     if len(matches) > 1:
         raise ValueError("Selected reference fragment (--dihedral) is not unique in the molecule!")
     return matches[0]  # Return the first match    
-
-def find_fragment_atoms_with_hydrogens(xyzfile, reference_smiles, chrg=0):
+def find_fragment_atoms_with_hydrogens(xyzfile, reference_smiles, chrg=0, sanitize=False):
     """
     Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
     Uses openbabel to generate mol object with correct bond orders.
 
     """
     mol = next(pybel.readfile('xyz', xyzfile))
-    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), removeHs = False)
+    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), removeHs = False, sanitize=sanitize)
     reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
     matches = mol.GetSubstructMatches(reference_fragment)
     if not matches:

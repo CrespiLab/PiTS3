@@ -12,9 +12,8 @@ Step_End
 
 # Step 2: geometry optimization
 New_Step
-  ! UKS wB97x-3c OptTS
+  ! wB97x-3c OptTS
   %scf
-    BrokenSym 1,1
 	Guess PModel
   end
   %geom
@@ -25,18 +24,12 @@ Step_End
 
 # Step 3: hessian at DFT-reoptimized geometry
 New_Step
-  ! UKS wB97x-3c AnFreq
-  %scf
-    BrokenSym 1,1
-  end
+  ! wB97x-3c AnFreq
 Step_End
 
 # Step 4: SP of optimized TS
 New_Step
   ! wB97x-d4 def2-tzvp
-  %scf
-    BrokenSym 1,1
-  end
 Step_End
 
 # Step 5: Optimization of forward end f***REMOVED*** pysisyphus
