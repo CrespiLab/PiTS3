@@ -17,13 +17,9 @@ args = parser.parse_args()
 
 def merge_molecules(mol1, mol2, bond_type=Chem.BondType.SINGLE):
     """
-    Merges two molecules by removing the 'U' attachment points first and connecting
-    the atoms adjacent to them.
-    
-    :param mol1: First molecule (RDKit Mol)
-    :param mol2: Second molecule (RDKit Mol)
-    :param bond_type: Type of bond to form (default: SINGLE)
-    :return: Merged molecule
+    Merges two molecules by removing the 'U' attachment points and connecting
+    the atoms adjacent to them. This version adjusts the neighbor indices based
+    on the removal of the U atoms.
     """
     # Convert mol1 to an editable molecule
     combined = Chem.RWMol(mol1)
@@ -35,21 +31,31 @@ def merge_molecules(mol1, mol2, bond_type=Chem.BondType.SINGLE):
     if not u_atoms_1 or not u_atoms_2:
         raise ValueError("No U attachment points found in one or both fragments!")
 
-    # Get the atom adjacent to U in each molecule
-    atom1_idx = u_atoms_1[0].GetNeighbors()[0].GetIdx()
-    atom2_idx = u_atoms_2[0].GetNeighbors()[0].GetIdx()
+    # For each molecule, record the index of U and its neighbor
+    # For mol1:
+    u1_idx = u_atoms_1[0].GetIdx()
+    neighbor1 = u_atoms_1[0].GetNeighbors()[0]
+    n1_idx = neighbor1.GetIdx()
+    # Adjust neighbor index: if neighbor comes after U, subtract 1 after removal.
+    new_n1_idx = n1_idx - 1 if n1_idx > u1_idx else n1_idx
+
+    # For mol2:
+    u2_idx = u_atoms_2[0].GetIdx()
+    neighbor2 = u_atoms_2[0].GetNeighbors()[0]
+    n2_idx = neighbor2.GetIdx()
+    new_n2_idx = n2_idx - 1 if n2_idx > u2_idx else n2_idx
 
     # Create an editable copy of mol2
     editable_mol2 = Chem.RWMol(mol2)
 
     # Remove the U atoms f***REMOVED*** both molecules before merging
-    editable_mol2.RemoveAtom(u_atoms_2[0].GetIdx())
-    combined.RemoveAtom(u_atoms_1[0].GetIdx())
+    editable_mol2.RemoveAtom(u2_idx)  # Remove U f***REMOVED*** mol2
+    combined.RemoveAtom(u1_idx)       # Remove U f***REMOVED*** mol1
 
-    # Calculate the offset after removing an atom f***REMOVED*** mol1
+    # Calculate the offset after removal f***REMOVED*** mol1
     offset = combined.GetNumAtoms()
 
-    # Append atoms f***REMOVED*** mol2 to mol1
+    # Append atoms f***REMOVED*** mol2 to mol1 (with the adju***REMOVED***d indices f***REMOVED*** mol2)
     for atom in editable_mol2.GetAtoms():
         combined.AddAtom(atom)
 
@@ -61,8 +67,8 @@ def merge_molecules(mol1, mol2, bond_type=Chem.BondType.SINGLE):
             bond.GetBondType()
         )
 
-    # Add a new bond connecting the attachment points f***REMOVED*** each fragment
-    combined.AddBond(atom1_idx, atom2_idx + offset, bond_type)
+    # Add a new bond connecting the adju***REMOVED***d neighbor atoms
+    combined.AddBond(new_n1_idx, new_n2_idx + offset, bond_type)
 
     return combined.GetMol()
 
