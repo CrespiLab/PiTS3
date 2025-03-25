@@ -41,14 +41,36 @@ if __name__== '__main__':
                     dihedral_line_xtb += ',180.0'
                     scan_line = '180.0, 0.0, 18'
                 angle_CNC_nums = dihedral_nums[1:]
+                constraint = tsp.find_fragment_atoms_with_hydrogens(mol, args.mode, sanitize=False)
             case 'C1C=CCC=C1':
                 cyclohexadiene_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
                 distance1, distance2 = cyclohexadiene_nums[1::4], cyclohexadiene_nums[2::2]
-                print(f'''Reference smiles {args.mode} found, atom numbers: {cyclohexadiene_nums}, concerted scan will be 
-                done between atom pairs {distance1} and {distance2}''')
+                print(f'''Reference smiles {args.mode} found, atom numbers: {cyclohexadiene_nums}, concerted scan will be done between atom pairs {distance1} and {distance2}''')
+                constraint = tsp.find_fragment_atoms_with_hydrogens(mol, args.mode, sanitize=False)
+            case 'N=CC=CC=C':
+                count = 0
+                smiles_list = ['N:CC=CC=CC', 'N:CC=CC:CC', 'N:CCCC:CC', 'N=CCCC:CC','N=CC=CC:CC','N:CCCC=CC','N:CC=CC:CC','N=CC=CC=CC',]
+                matches=[]
+                while not matches:
+                    try:
+                        matches = tsp.find_fragment_atoms(mol, smiles_list[count], sanitize = False)
+                        count += 1
+                    except ValueError:
+                        print(f'Reference fragment {smiles_list[count-1]} not found, trying {smiles_list[count]}')
+                        count += 1
+                        continue
+                print(f'Match found with SMILES {smiles_list[count-1]: <20}: {matches}')
+                adae_chain_nums = list(map(lambda x: x+1, matches))
+                distance1 = [adae_chain_nums[0], adae_chain_nums[-2]]
+                print(f'''Reference smiles {args.mode} found, atom numbers: {adae_chain_nums}, concerted scan will be done between atom pairs {distance1}''')
+                constraint = tsp.find_fragment_atoms_with_hydrogens(mol, smiles_list[count-1], sanitize=False)
             case _:
-                sys.exit('No key TS mode provided (arg -m) or it is not recognized, exiting')
-               
+                try:
+                    fragment_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
+                    print(fragment_nums)
+                except ValueError:
+                    print(f'Reque***REMOVED***d SMILES {args.mode} not found in the molecule, exiting')
+                    sys.exit('No key TS mode provided (arg -m) or it is not recognized, exiting')
 
 ####### Saving starting dir
         start_dir = os.getcwd()
@@ -73,6 +95,7 @@ if __name__== '__main__':
                                                 dihedral=dihedral_line_xtb, 
                                                 scan=scan_line,
                                                 etemp='--etemp 1500',)# solvent='--alpb acetonitrile')
+                        
             case 'C1C=CCC=C1':
                 scanned = tsp.xtb_scan_nbd(optimized,
                                           dirname=scan_dir,
@@ -80,6 +103,12 @@ if __name__== '__main__':
                                           distance2 = distance2,
                                           scan = '2.5, 1.5, 50',
                                           etemp='--etemp 1500',)
+            case 'N=CC=CC=C':
+                scanned = tsp.xtb_scan_adae(optimized,
+                                           dirname=scan_dir,
+                                           distance1 = distance1,
+                                           scan = '2.5, 1.5, 50',
+                                           etemp='--etemp 1500',)
         
 ####### 3 Second dia***REMOVED***reomer reopt
         m_opt_dir = tsp.mkbasedir(mol, prefix='3_', suffix='_xtb_scan_reopt')
@@ -95,11 +124,9 @@ if __name__== '__main__':
                           optimized, 
                           scan_reoptimized, 
                           dirname=for_pysis)
-
+'''
 #        TS = '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/results/new_imines/C13H11N/4_C13H11N_pysis/ts_final_geometry.xyz'
 ####### 5 Constrained sampling with CREST
-        constraint = tsp.find_fragment_atoms_with_hydrogens(optimized, args.mode, sanitize=False)
-#        breakpoint()
         for_TS_sampling = tsp.mkbasedir(mol, prefix='5_', suffix='_TS_sampling', )
         TS_conformers = tsp.crest_constrained_sampling(TS,
                                                        dirname=for_TS_sampling, 
@@ -124,6 +151,7 @@ if __name__== '__main__':
         ircs = tsp.pysis_ts_irc(f'{ts_pipe_dir}/templates/TS_reopt_irc.yaml',
                                   xyz = cregened_ensemble,
                                   dirname = for_pysis_irc,)
+
 ####### 9 ORCA wB97x-3c Hess + TSOpt + IRC
         for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
         tsp.orca_three_points(ircs,
@@ -133,16 +161,4 @@ if __name__== '__main__':
 #                              control_ang_range = [100,140])
         os.chdir(start_dir)
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+'''     
