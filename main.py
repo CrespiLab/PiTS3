@@ -62,6 +62,7 @@ if __name__== '__main__':
                 print(f'Match found with SMILES {smiles_list[count-1]: <20}: {matches}')
                 adae_chain_nums = list(map(lambda x: x+1, matches))
                 distance1 = [adae_chain_nums[0], adae_chain_nums[-2]]
+                starting_distance = tsp.get_distance(mol, adae_chain_nums[0], adae_chain_nums[-2])
                 print(f'''Reference smiles {args.mode} found, atom numbers: {adae_chain_nums}, concerted scan will be done between atom pairs {distance1}''')
                 constraint = tsp.find_fragment_atoms_with_hydrogens(mol, smiles_list[count-1], sanitize=False)
             case _:
@@ -107,7 +108,7 @@ if __name__== '__main__':
                 scanned = tsp.xtb_scan_adae(optimized,
                                            dirname=scan_dir,
                                            distance1 = distance1,
-                                           scan = '2.5, 1.5, 50',
+                                           scan = f'{starting_distance}, 1.5, 50',
                                            etemp='--etemp 1500',)
         
 ####### 3 Second dia***REMOVED***reomer reopt

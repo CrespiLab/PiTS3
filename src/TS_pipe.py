@@ -142,7 +142,7 @@ def xtb_scan_adae(input_file, dirname='.', model='--gfn2', solvent='',
    force constant=0.5
    distance: {distance1[0]}, {distance1[1]}, auto
 $scan
-   1: 2.5, 1.5, 50
+   1: {scan}
 $end'''
     input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
     with open('scan.inp','w') as file:
@@ -595,13 +595,33 @@ def get_angle(xyzfile, atom1, atom2, atom3):
 
     Returns
     -------
-    Dihedral in degrees.
+    Angle in degrees.
 
     '''
     mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
     atoms = list(map(lambda x: x-1, [atom1, atom2, atom3]))
     angle = rdMolTransforms.GetAngleDeg(mol.GetConformer(), *atoms)
     return angle
+def get_distance(xyzfile, atom1, atom2):
+    '''
+    Measures distance in an .xyz molecule.
+    
+    Parameters
+    ----------
+    xyzfile : str
+        xyz geometry file.
+    atom1, atom2 : ints
+        "Natural" atom numbers (with numbering starting at 1!)
+
+    Returns
+    -------
+    Distance in ångström (hello f***REMOVED*** Uppsala University!).
+
+    '''
+    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+    atoms = list(map(lambda x: x-1, [atom1, atom2]))
+    distance = rdMolTransforms.GetBondLength(mol.GetConformer(), *atoms)
+    return distance
 #######################################################################
 #######################################################################
 #######################################################################
