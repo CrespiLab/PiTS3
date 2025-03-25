@@ -104,6 +104,31 @@ $end'''
     rotated_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return rotated_path
+def xtb_scan_nbd(input_file, dirname='.', model='--gfn2', solvent='',
+                      distance1='0,0', distance2='0,0', scan='0,0,0', optlev='', etemp=''):
+    '''
+    Run a concerted scan along distance between double bond in double bonds in norbornadiene at gfn2 level of theory
+        Arguments:
+    path         - path to XYZ geometry file
+        Returns:
+    final_path - XYZ geometry of alternative dia***REMOVED***reomer
+    '''
+    scan_input=f'''$constrain
+   force constant=0.5
+   distance: {distance1[0]}, {distance1[1]}, auto
+   distance: {distance2[0]}, {distance2[1]}, auto
+$scan
+   mode=concerted
+   1: 2.5, 1.5, 50
+   2: 2.5, 1.5, 50
+$end'''
+    input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
+    with open('scan.inp','w') as file:
+        file.write(scan_input)
+    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} {etemp} | tee xtb_dih_scan_stdout.log')
+    final_path = os.path.abspath('xtbopt.xyz')
+    os.chdir(initial_path)
+    return final_path
 def xtb_scan_inversion(input_file, dirname='.', model='--gfn2', solvent='',
                        angle='0,0,0,0.0', scan='0,0,0', optlev=''):
     '''

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, shutil, argparse
+import os, shutil, argparse, sys
 import src.TS_pipe as tsp
 import pdb
 
@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(
                     description='Semi-automatically finds TS for molecular switches',)
 
 parser.add_argument('filename', nargs='+', help='XYZ file to process')
-parser.add_argument('-d', '--dihedral', nargs='?', help='XYZ file to process')
+parser.add_argument('-m', '--mode', nargs='?', help='TS mode (coordinate)')
 args = parser.parse_args()
 
 #%%
@@ -25,12 +25,36 @@ if __name__== '__main__':
     mols = args.filename
     mols = list(map(os.path.abspath, mols))
 
+
     for mol in mols:
+
+####### 0 Detecting key TS node
+        match args.mode:
+            case 'C-C=C-C' | 'C-C=N-C':
+                dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
+                opt_dih_value = tsp.get_dihedral(optimized, *dihedral_nums)
+                dihedral_line_xtb = ','.join(map(str,dihedral_nums))
+                if abs(opt_dih_value) < 90:
+                    dihedral_line_xtb += ',0.0'
+                    scan_line = '0.0, 180.0, 18'
+                else:
+                    dihedral_line_xtb += ',180.0'
+                    scan_line = '180.0, 0.0, 18'
+                angle_CNC_nums = dihedral_nums[1:]
+            case 'C1C=CCC=C1':
+                cyclohexadiene_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
+                distance1, distance2 = cyclohexadiene_nums[1::4], cyclohexadiene_nums[2::2]
+                print(f'''Reference smiles {args.mode} found, atom numbers: {cyclohexadiene_nums}, concerted scan will be 
+                done between atom pairs {distance1} and {distance2}''')
+            case _:
+                sys.exit('No key TS mode provided (arg -m) or it is not recognized, exiting')
+               
+
+####### Saving starting dir
         start_dir = os.getcwd()
         mol_dir = tsp.mkbasedir(mol, ignore_existing=True)
         shutil.copy(mol, mol_dir)
         os.chdir(mol_dir)
-
 ####### 1 Optimization
         opt_dir = tsp.mkbasedir(mol, prefix='1_', suffix='_xtb_opt')
         optimized = tsp.xtb_opt(mol, 
@@ -39,40 +63,27 @@ if __name__== '__main__':
                                 etemp='--etemp 1500')
 ##                                solvent='--alpb acetonitrile',)
          
-####### Detecting dihedral	
-#        dihedral_nums = tsp.find_fragment_atoms(mol, 'C/C=N\C')
-### FOR NITRO-CONTAINING IMINES
-        if not args.dihedral:
-            ref_smiles = 'C/C=N\C'
-        else:
-            ref_smiles = args.dihedral
-#        optimized = '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/results/new_imines/C13H11N/1_C13H11N_xtb_opt/xtbopt.xyz'
-        dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, ref_smiles, sanitize = False)))
-        opt_dih_value = tsp.get_dihedral(optimized, *dihedral_nums)
-        dihedral_line_xtb = ','.join(map(str,dihedral_nums))
-        if abs(opt_dih_value) < 90:
-            dihedral_line_xtb += ',0.0'
-            scan_line = '0.0, 180.0, 18'
-        else:
-            dihedral_line_xtb += ',180.0'
-            scan_line = '180.0, 0.0, 18'
-        angle_CNC_nums = dihedral_nums[1:]
-##        angle_CNC = list(map(str,dihedral_nums[1:]))
-##        angle_NCC = list(map(str,dihedral_nums[0:3]))
-##        angle_CNC_line = ','.join(angle_CNC) + ',auto'
-##        angle_NCC_line = ','.join(angle_NCC) + ',auto'
-#        
-####### 2 Scan dihedral (rotation E to Z or Z to E)
-        scan_dih_dir = tsp.mkbasedir(mol, prefix='2_', suffix='_xtb_scan_dih')
-        dih_scanned = tsp.xtb_scan_rotation(optimized, 
-                                            dirname=scan_dih_dir, 
-                                            dihedral=dihedral_line_xtb, 
-                                            scan=scan_line,
-                                            etemp='--etemp 1500',)# solvent='--alpb acetonitrile')
+
+####### 2 Scan
+        scan_dir = tsp.mkbasedir(mol, prefix='2_', suffix='_xtb_scan')
+        match args.mode:
+            case 'C-C=C-C' | 'C-C=N-C':
+                scanned = tsp.xtb_scan_rotation(optimized, 
+                                                dirname=scan_dir, 
+                                                dihedral=dihedral_line_xtb, 
+                                                scan=scan_line,
+                                                etemp='--etemp 1500',)# solvent='--alpb acetonitrile')
+            case 'C1C=CCC=C1':
+                scanned = tsp.xtb_scan_nbd(optimized,
+                                          dirname=scan_dir,
+                                          distance1 = distance1,
+                                          distance2 = distance2,
+                                          scan = '2.5, 1.5, 50',
+                                          etemp='--etemp 1500',)
         
 ####### 3 Second dia***REMOVED***reomer reopt
         m_opt_dir = tsp.mkbasedir(mol, prefix='3_', suffix='_xtb_scan_reopt')
-        scan_reoptimized = tsp.xtb_opt(dih_scanned, 
+        scan_reoptimized = tsp.xtb_opt(scanned, 
                                        dirname=m_opt_dir,
                                        optlev='--optlev extreme',
                                        etemp='--etemp 1500',)
@@ -87,7 +98,7 @@ if __name__== '__main__':
 
 #        TS = '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/results/new_imines/C13H11N/4_C13H11N_pysis/ts_final_geometry.xyz'
 ####### 5 Constrained sampling with CREST
-        constraint = tsp.find_fragment_atoms_with_hydrogens(optimized, ref_smiles, sanitize=False)
+        constraint = tsp.find_fragment_atoms_with_hydrogens(optimized, args.mode, sanitize=False)
 #        breakpoint()
         for_TS_sampling = tsp.mkbasedir(mol, prefix='5_', suffix='_TS_sampling', )
         TS_conformers = tsp.crest_constrained_sampling(TS,
@@ -121,7 +132,6 @@ if __name__== '__main__':
 #                              control_ang = angle_CNC_nums,
 #                              control_ang_range = [100,140])
         os.chdir(start_dir)
-        
         
         
         
