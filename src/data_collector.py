@@ -84,6 +84,7 @@ if __name__== '__main__':
                     data_collector[name]['TS guess key parameter'] = 'dihedral C-C=C-C'
                     data_collector[name]['TS guess key value'] = dih_value
                 case 'C-C=N-C':
+                    breakpoint()
                     angle_value = tsp.get_angle(first_ts, *dihedral_nums[1:])
                     data_collector[name]['TS guess key parameter'] = 'angle C=N-C'
                     data_collector[name]['TS guess key value'] = angle_value
@@ -135,29 +136,29 @@ if __name__== '__main__':
                 data_collector[name]['orca conformers properties'][curr_orca_dir] = {}
                 with open(f'{curr_orca_dir}/cregened_conformers.out', 'r') as f:
                     text = f.read()
-                ts_dG        = re.findall(r'(?m)(?s)COMPOUND JOB  3.*Final Gibbs free energy +\.+ +(-?\d+\.\d+).*COMPOUND JOB  4', text)
-                ts_ecorr     = re.findall(r'(?m)(?s)COMPOUND JOB  3.*G-E\(el\) +\.+ +(-?\d+\.\d+).*COMPOUND JOB  4', text)
-                ts_def2_e    = re.findall(r'(?m)(?s)COMPOUND JOB  6.*FINAL SINGLE POINT ENERGY +(-?\d+\.\d+).*COMPOUND JOB  7', text)
+                ts_dG        = re.findall(r'(?m)(?s)COMPOUND JOB  3.*Final Gibbs free energy +\.+ +(-?\d+\.\d+).*COMPOUND JOB  4', text)[0]
+                ts_ecorr     = re.findall(r'(?m)(?s)COMPOUND JOB  3.*G-E\(el\) +\.+ +(-?\d+\.\d+).*COMPOUND JOB  4', text)[0]
+                ts_def2_e    = re.findall(r'(?m)(?s)COMPOUND JOB  6.*FINAL SINGLE POINT ENERGY +(-?\d+\.\d+).*COMPOUND JOB  7', text)[0]
 
-                reac1_dG     = re.findall(r'(?m)(?s)COMPOUND JOB  4.*Final Gibbs free energy +\.+ +(-?\d+\.\d+).*COMPOUND JOB  5', text)
-                reac1_ecorr  = re.findall(r'(?m)(?s)COMPOUND JOB  4.*G-E\(el\) +\.+ +(-?\d+\.\d+).*COMPOUND JOB  5', text)
-                reac1_def2_e = re.findall(r'(?m)(?s)COMPOUND JOB  7.*FINAL SINGLE POINT ENERGY +(-?\d+\.\d+).*COMPOUND JOB  8', text)
+                reac1_dG     = re.findall(r'(?m)(?s)COMPOUND JOB  4.*Final Gibbs free energy +\.+ +(-?\d+\.\d+).*COMPOUND JOB  5', text)[0]
+                reac1_ecorr  = re.findall(r'(?m)(?s)COMPOUND JOB  4.*G-E\(el\) +\.+ +(-?\d+\.\d+).*COMPOUND JOB  5', text)[0]
+                reac1_def2_e = re.findall(r'(?m)(?s)COMPOUND JOB  7.*FINAL SINGLE POINT ENERGY +(-?\d+\.\d+).*COMPOUND JOB  8', text)[0]
 
-                reac2_dG     = re.findall(r'(?m)(?s)COMPOUND JOB  5.*Final Gibbs free energy +\.+ +(-?\d+\.\d+).*COMPOUND JOB  6', text)
-                reac2_ecorr  = re.findall(r'(?m)(?s)COMPOUND JOB  5.*G-E\(el\) +\.+ +(-?\d+\.\d+).*COMPOUND JOB  6', text)
-                reac2_def2_e = re.findall(r'(?m)(?s)COMPOUND JOB  8.*FINAL SINGLE POINT ENERGY +(-?\d+\.\d+)', text)
+                reac2_dG     = re.findall(r'(?m)(?s)COMPOUND JOB  5.*Final Gibbs free energy +\.+ +(-?\d+\.\d+).*COMPOUND JOB  6', text)[0]
+                reac2_ecorr  = re.findall(r'(?m)(?s)COMPOUND JOB  5.*G-E\(el\) +\.+ +(-?\d+\.\d+).*COMPOUND JOB  6', text)[0]
+                reac2_def2_e = re.findall(r'(?m)(?s)COMPOUND JOB  8.*FINAL SINGLE POINT ENERGY +(-?\d+\.\d+)', text)[0]
                 
-                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS Gibbs energy']              =  ts_dG       
-                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS E corr']                    =  ts_ecorr    
-                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS def2-tzvp full energy']     =  ts_def2_e   
+                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS Gibbs energy']              =  float(ts_dG)
+                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS E corr']                    =  float(ts_ecorr)    
+                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS def2-tzvp full energy']     =  float(ts_def2_e)   
 
-                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 Gibbs energy']           =  reac1_dG    
-                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 E corr']                 =  reac1_ecorr 
-                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 def2-tzvp full energy']  =  reac1_def2_e
+                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 Gibbs energy']           =  float(reac1_dG)    
+                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 E corr']                 =  float(reac1_ecorr) 
+                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 def2-tzvp full energy']  =  float(reac1_def2_e)
 
-                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 Gibbs energy']           =  reac2_dG    
-                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 E corr']                 =  reac2_ecorr 
-                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 def2-tzvp full energy']  =  reac2_def2_e
+                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 Gibbs energy']           =  float(reac2_dG)    
+                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 E corr']                 =  float(reac2_ecorr) 
+                data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 def2-tzvp full energy']  =  float(reac2_def2_e)
                 match args.mode:
                     case 'C-C=C-C':
                         dih_value_TS = tsp.get_dihedral(f'{curr_orca_dir}/cregened_conformers_Compound_2.xyz', *dihedral_nums)
@@ -195,6 +196,8 @@ if __name__== '__main__':
                         data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 conformer key value'] = dist_value_reac1
                         data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 conformer key value'] = dist_value_reac2
         except FileNotFoundError as e:
+            print(e)
+        except IndexError as e:
             print(e)
         
     print(f'length of the data collector dictionary: {len(data_collector)}')
