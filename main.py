@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('filename', nargs='+', help='XYZ file to process')
 parser.add_argument('-m', '--mode', nargs='?', help='TS mode (coordinate)')
+parser.add_argument('-o', '--orca_template', help='ORCA template for ***REMOVED***p 9')
 args = parser.parse_args()
 
 #%%
@@ -32,8 +33,9 @@ if __name__== '__main__':
         match args.mode:
             case 'C-C=C-C' | 'C-C=N-C':
                 dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
-                opt_dih_value = tsp.get_dihedral(optimized, *dihedral_nums)
+                opt_dih_value = tsp.get_dihedral(mol, *dihedral_nums)
                 dihedral_line_xtb = ','.join(map(str,dihedral_nums))
+                print(f'Reference smiles {args.mode} found, atom numbers: {dihedral_nums}')
                 if abs(opt_dih_value) < 90:
                     dihedral_line_xtb += ',0.0'
                     scan_line = '0.0, 180.0, 18'
@@ -45,7 +47,7 @@ if __name__== '__main__':
             case 'C1C=CCC=C1':
                 cyclohexadiene_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
                 distance1, distance2 = cyclohexadiene_nums[1::4], cyclohexadiene_nums[2::2]
-                print(f'''Reference smiles {args.mode} found, atom numbers: {cyclohexadiene_nums}, concerted scan will be done between atom pairs {distance1} and {distance2}''')
+                print(f'Reference smiles {args.mode} found, atom numbers: {cyclohexadiene_nums}, concerted scan will be done between atom pairs {distance1} and {distance2}')
                 constraint = tsp.find_fragment_atoms_with_hydrogens(mol, args.mode, sanitize=False)
             case 'N=CC=CC=C':
                 count = 0
@@ -63,7 +65,25 @@ if __name__== '__main__':
                 adae_chain_nums = list(map(lambda x: x+1, matches))
                 distance1 = [adae_chain_nums[0], adae_chain_nums[-2]]
                 starting_distance = tsp.get_distance(mol, adae_chain_nums[0], adae_chain_nums[-2])
-                print(f'''Reference smiles {args.mode} found, atom numbers: {adae_chain_nums}, concerted scan will be done between atom pairs {distance1}''')
+                print(f'Reference smiles {args.mode} found, atom numbers: {adae_chain_nums}, concerted scan will be done between atom pair {distance1}')
+                constraint = tsp.find_fragment_atoms_with_hydrogens(mol, smiles_list[count-1], sanitize=False)
+            case 'C1=CCNC=C1':
+                count = 0
+                smiles_list = ['C1=CCNC=C1', 'C1CCNC=C1']
+                matches=[]
+                while not matches:
+                    try:
+                        matches = tsp.find_fragment_atoms(mol, smiles_list[count], sanitize = False)
+                        count += 1
+                    except ValueError:
+                        print(f'Reference fragment {smiles_list[count-1]} not found, trying {smiles_list[count]}')
+                        count += 1
+                        continue
+                print(f'Match found with SMILES {smiles_list[count-1]: <20}: {matches}')
+                adae_chain_nums = list(map(lambda x: x+1, matches))
+                distance1 = adae_chain_nums[2:4]
+                print(f'Reference smiles {args.mode} found, atom numbers: {adae_chain_nums}, concerted scan will be done between atom pair {distance1}')
+                starting_distance = tsp.get_distance(mol, *distance1)
                 constraint = tsp.find_fragment_atoms_with_hydrogens(mol, smiles_list[count-1], sanitize=False)
             case _:
                 try:
@@ -110,6 +130,13 @@ if __name__== '__main__':
                                            distance1 = distance1,
                                            scan = f'{starting_distance}, 1.5, 50',
                                            etemp='--etemp 1500',)
+            case 'C1=CCNC=C1':
+                scanned = tsp.xtb_scan_adae(optimized,
+                                           dirname=scan_dir,
+                                           distance1 = distance1,
+                                           scan = f'{starting_distance}, 2.5, 50',
+                                           etemp='--etemp 1500',)
+
         
 ####### 3 Second dia***REMOVED***reomer reopt
         m_opt_dir = tsp.mkbasedir(mol, prefix='3_', suffix='_xtb_scan_reopt')
@@ -125,8 +152,7 @@ if __name__== '__main__':
                           optimized, 
                           scan_reoptimized, 
                           dirname=for_pysis)
-'''
-#        TS = '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/results/new_imines/C13H11N/4_C13H11N_pysis/ts_final_geometry.xyz'
+                          
 ####### 5 Constrained sampling with CREST
         for_TS_sampling = tsp.mkbasedir(mol, prefix='5_', suffix='_TS_sampling', )
         TS_conformers = tsp.crest_constrained_sampling(TS,
@@ -156,10 +182,10 @@ if __name__== '__main__':
 ####### 9 ORCA wB97x-3c Hess + TSOpt + IRC
         for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
         tsp.orca_three_points(ircs,
-                              orca_template = f'{ts_pipe_dir}/templates/orca_three_points.inp',
+                              orca_template = args.orca_template,
                               dirname = for_orca,)
 #                              control_ang = angle_CNC_nums,
 #                              control_ang_range = [100,140])
+
         os.chdir(start_dir)
         
-'''     

@@ -14,7 +14,7 @@ for name in names:
     fragment = tsp.find_fragment_atoms(f'{prefix}/data/structures/stilbenes/{name}.xyz', 'C-C=C-C', sanitize=False)
 #    print(fragment)
 #    print(name, fragment)
-    for conf in glob.glob(f'{prefix}/results/stilbenes/{name}/8_*/cregened_conformers_*/ts_final_geometry.xyz'):
+    for conf in glob.glob(f'{prefix}/results/stilbenes/{name}/4_*/ts_final_geometry.xyz'):
         dih = tsp.get_dihedral(conf, *[i+1 for i in fragment])
 #        print(dih)
         print(f'{name: <20}{dih}')
