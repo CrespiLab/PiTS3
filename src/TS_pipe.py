@@ -578,7 +578,11 @@ def get_dihedral(xyzfile, atom1, atom2, atom3, atom4):
     Dihedral in degrees.
 
     '''
-    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+    try:
+        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+    except AttributeError as e:
+        print(e)
+        return None
     atoms = list(map(lambda x: x-1, [atom1, atom2, atom3, atom4]))
     dihedral = rdMolTransforms.GetDihedralDeg(mol.GetConformer(), *atoms)
     return dihedral
@@ -598,7 +602,11 @@ def get_angle(xyzfile, atom1, atom2, atom3):
     Angle in degrees.
 
     '''
-    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+    try:
+        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+    except AttributeError as e:
+        print(e)
+        return None
     atoms = list(map(lambda x: x-1, [atom1, atom2, atom3]))
     angle = rdMolTransforms.GetAngleDeg(mol.GetConformer(), *atoms)
     return angle
@@ -618,7 +626,11 @@ def get_distance(xyzfile, atom1, atom2):
     Distance in ångström (hello f***REMOVED*** Uppsala University!).
 
     '''
-    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+    try:
+        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+    except AttributeError as e:
+        print(e)
+        return None
     atoms = list(map(lambda x: x-1, [atom1, atom2]))
     distance = rdMolTransforms.GetBondLength(mol.GetConformer(), *atoms)
     return distance

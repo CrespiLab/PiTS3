@@ -84,7 +84,6 @@ if __name__== '__main__':
                     data_collector[name]['TS guess key parameter'] = 'dihedral C-C=C-C'
                     data_collector[name]['TS guess key value'] = dih_value
                 case 'C-C=N-C':
-                    breakpoint()
                     angle_value = tsp.get_angle(first_ts, *dihedral_nums[1:])
                     data_collector[name]['TS guess key parameter'] = 'angle C=N-C'
                     data_collector[name]['TS guess key value'] = angle_value
