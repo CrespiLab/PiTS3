@@ -580,12 +580,12 @@ def get_dihedral(xyzfile, atom1, atom2, atom3, atom4):
     '''
     try:
         mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+        atoms = list(map(lambda x: x-1, [atom1, atom2, atom3, atom4]))
+        dihedral = rdMolTransforms.GetDihedralDeg(mol.GetConformer(), *atoms)
+        return dihedral
     except AttributeError as e:
         print(e)
         return None
-    atoms = list(map(lambda x: x-1, [atom1, atom2, atom3, atom4]))
-    dihedral = rdMolTransforms.GetDihedralDeg(mol.GetConformer(), *atoms)
-    return dihedral
 def get_angle(xyzfile, atom1, atom2, atom3):
     '''
     Measures angle in an .xyz molecule.
@@ -604,12 +604,12 @@ def get_angle(xyzfile, atom1, atom2, atom3):
     '''
     try:
         mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+        atoms = list(map(lambda x: x-1, [atom1, atom2, atom3]))
+        angle = rdMolTransforms.GetAngleDeg(mol.GetConformer(), *atoms)
+        return angle
     except AttributeError as e:
         print(e)
         return None
-    atoms = list(map(lambda x: x-1, [atom1, atom2, atom3]))
-    angle = rdMolTransforms.GetAngleDeg(mol.GetConformer(), *atoms)
-    return angle
 def get_distance(xyzfile, atom1, atom2):
     '''
     Measures distance in an .xyz molecule.
@@ -628,12 +628,12 @@ def get_distance(xyzfile, atom1, atom2):
     '''
     try:
         mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+        atoms = list(map(lambda x: x-1, [atom1, atom2]))
+        distance = rdMolTransforms.GetBondLength(mol.GetConformer(), *atoms)
+        return distance
     except AttributeError as e:
         print(e)
         return None
-    atoms = list(map(lambda x: x-1, [atom1, atom2]))
-    distance = rdMolTransforms.GetBondLength(mol.GetConformer(), *atoms)
-    return distance
 #######################################################################
 #######################################################################
 #######################################################################
