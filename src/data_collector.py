@@ -158,6 +158,13 @@ if __name__== '__main__':
                 data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 Gibbs energy']           =  float(reac2_dG)    
                 data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 E corr']                 =  float(reac2_ecorr) 
                 data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 def2-tzvp full energy']  =  float(reac2_def2_e)
+                if args.mode == 'C1C=CCC=C1':
+                    ts_dH        = re.findall(r'(?m)(?s)COMPOUND JOB  3.*Total enthalpy +\.+ +(-?\d+\.\d+).*COMPOUND JOB  4', text)[0]
+                    reac1_dH     = re.findall(r'(?m)(?s)COMPOUND JOB  4.*Total enthalpy +\.+ +(-?\d+\.\d+).*COMPOUND JOB  5', text)[0]
+                    reac2_dH     = re.findall(r'(?m)(?s)COMPOUND JOB  5.*Total enthalpy +\.+ +(-?\d+\.\d+).*COMPOUND JOB  6', text)[0]
+                    data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS enthalpy']              =  float(ts_dH)
+                    data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 enthalpy']           =  float(reac1_dH)    
+                    data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 enthalpy']           =  float(reac2_dH)    
                 match args.mode:
                     case 'C-C=C-C':
                         dih_value_TS = tsp.get_dihedral(f'{curr_orca_dir}/cregened_conformers_Compound_2.xyz', *dihedral_nums)
