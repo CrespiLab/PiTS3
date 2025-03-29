@@ -145,7 +145,6 @@ if __name__== '__main__':
                                        optlev='--optlev extreme',
                                        etemp='--etemp 1500',)
 #                                    solvent='--alpb acetonitrile',)
-
 ####### 4 Pysis growing string to find TS between E and Z
         for_pysis = tsp.mkbasedir(mol, prefix='4_', suffix='_pysis')
         TS = tsp.pysis_gs(f'{ts_pipe_dir}/templates/TS_10_nodes.yaml',
@@ -153,6 +152,43 @@ if __name__== '__main__':
                           scan_reoptimized, 
                           dirname=for_pysis)
                           
+####### 4.5 Intermediate TS geometry check
+        match args.mode:
+            case 'C-C=C-C':
+                check_dih_value = tsp.get_dihedral(TS, *dihedral_nums)
+                if abs(check_dih_value) < 70.0 or abs(check_dih_value) > 110.0:
+                    print(f'Key parameter, dihedral {dihedral_nums} = {check_dih_value}, it is too far f***REMOVED*** 90.0, starting the next molecule (or stopping)')
+                    continue
+            case 'C-C=N-C':
+                check_angle_CNC = tsp.get_angle(TS, *dihedral_nums[1:])
+                if check_angle_CNC < 160.0:
+                    print(f'Key parameter, angle {dihedral_nums[1:]} = {check_angle_CNC}, it is too far f***REMOVED*** 180.0, starting the next molecule (or stopping)')
+                    continue
+            case 'C1C=CCC=C1':
+                check_nbd_distances = tsp.get_distance(TS, *cyclohexadiene_nums[1::4]), tsp.get_distance(TS, *cyclohexadiene_nums[2::2])
+                if all([dist < 1.7 for dist in check_nbd_distances]):
+                    continue
+                    print(f'Both key parameters (distances {cyclohexadiene_nums[1::4]} and {cyclohexadiene_nums[2::2]}) are {check_nbd_distances[0]} and {check_nbd_distances[1]} and too close to quadricyclane, starting the next molecule (or stopping)')
+                elif all([dist > 2.2 for dist in check_nbd_distances]):
+                    print(f'Both key parameters (distances {cyclohexadiene_nums[1::4]} and {cyclohexadiene_nums[2::2]}) are {check_nbd_distances[0]} and {check_nbd_distances[1]} and too close to norbornadiene, starting the next molecule (or stopping)')
+                    continue
+            case 'N=CC=CC=C':
+                check_adae_distance = tsp.get_distance(TS, *distance1)
+                if check_adae_distance > 2.4:
+                    print(f'Key parameter, distance {distance1} = {check_adae_distance}, it is too long and close to open form, starting the next molecule (or stopping)')
+                    continue
+                elif check_adae_distance < 1.7:
+                    print(f'Key parameter, distance {distance1} = {check_adae_distance}, it is too short and close to closed form, starting the next molecule (or stopping)')
+                    continue
+            case 'C1=CCNC=C1':
+                check_adae_distance = tsp.get_distance(TS, *distance1)
+                if check_adae_distance > 2.4:
+                    print(f'Key parameter, distance {distance1} = {check_adae_distance}, it is too long and close to open form, starting the next molecule (or stopping)')
+                    continue
+                elif check_adae_distance < 1.7:
+                    print(f'Key parameter, distance {distance1} = {check_adae_distance}, it is too short and close to closed form, starting the next molecule (or stopping)')
+                    continue
+
 ####### 5 Constrained sampling with CREST
         for_TS_sampling = tsp.mkbasedir(mol, prefix='5_', suffix='_TS_sampling', )
         TS_conformers = tsp.crest_constrained_sampling(TS,
