@@ -8,7 +8,7 @@ f***REMOVED*** openbabel import pybel
 
 parser = argparse.ArgumentParser(
                     prog='TS_pipeline',
-                    description='Semi-automatically finds TS for molecular switches',)
+                    description='Data scraper for TS_pipeline',)
 
 parser.add_argument('filename', nargs='+', help='XYZ file to process')
 parser.add_argument('-m', '--mode', nargs='?', help='TS mode (coordinate)')
