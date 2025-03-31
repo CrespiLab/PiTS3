@@ -14,8 +14,12 @@ pip install openbabel --global-option=build_ext --global-option="-I/usr/include/
 cd TS_pipeline
 pip install .
 ```
+Adjust according to your folder structure:
+--global-option="-I/usr/include/openbabel3" and --global-option="-L/usr/lib/x86_64-linux-gnu/openbabel/3.1.1/"
 
 ### Programmes required
+These programmes need to be callable f***REMOVED*** the command-line.
+If not: adjust config.py and add paths to programmes.
 - OpenBabel
 If you need to compile it, see here:
 
@@ -38,6 +42,8 @@ If you need to compile it, see here:
 
 ../../../main.py C12H9NS.xyz
 ../../../main.py C12H9NS.xyz -m "TSModeFragment"
+../../../main.py C12H9NS.xyz -m 'C1C=CCC=C1'
+
 ```
 
 ## Instructions
@@ -45,3 +51,9 @@ If you need to compile it, see here:
 
 ### TS Mode Selection
 The tool 
+
+## RUN
+### Local
+main.py *.xyz | tee output.log
+
+
