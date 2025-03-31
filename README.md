@@ -7,12 +7,12 @@
 ### Local
 ```
 python -m venv TS_pipeline.venv
-git clone git@github.com:CrespiLab/TS_pipeline
+git clone https://github.com/CrespiLab/TS_pipeline/
 source TS_pipeline.venv/bin/activate
 sudo apt install libopenbabel-dev swig
 pip install openbabel --global-option=build_ext --global-option="-I/usr/include/openbabel3" --global-option="-L/usr/lib/x86_64-linux-gnu/openbabel/3.1.1/"
 cd TS_pipeline
-pip install .
+pip install -e .
 ```
 Adjust according to your folder structure:
 --global-option="-I/usr/include/openbabel3" and --global-option="-L/usr/lib/x86_64-linux-gnu/openbabel/3.1.1/"
