@@ -7,8 +7,8 @@ with open("README.md", "r") as fh:
 setup(
     name="TS_pipeline",
     version="1.0",
-    author="Roman Peshkov",
-    author_email="***REMOVED***an.peshkov@kemi.uu.se",
+    author="Roman Peshkov, Jorn Steen",
+    author_email="***REMOVED***an.peshkov@kemi.uu.se, ***REMOVED***n.***REMOVED***en@kemi.uu.se",
     description=" (Semi)automatic pipeline for TS search in molecular photoswitches",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -40,7 +40,7 @@ setup(
     
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Operating Sy***REMOVED***m :: OS Independent",
+        "Operating Sy***REMOVED***m :: Linux",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Physics",
         "Topic :: Scientific/Engineering :: Chemistry",
