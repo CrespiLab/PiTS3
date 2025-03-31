@@ -14,12 +14,9 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/CrespiLab/TS_pipeline",
     install_requires=[
-        'numpy>=2.2.2',
-        'scipy>=1.15.1',
-        'lmfit>=1.3.2',
-        'pandas>=2.2.3',
-        'PyQt5',
-        'matplotlib>=3.10.0'
+        'rdkit==2024.9.6',
+        'pysisyphus==0.7.6.post2',
+        'numpy==1.26.4',
     ],
     
     #extras_require={

@@ -23,6 +23,13 @@ args = parser.parse_args()
 
 #%%
 if __name__== '__main__':
+    if not args.mode:
+        sys.exit(f'''TS mode is not found! Select one of the available options:
+C-C=C-C       - for stilbenes
+C-C=N-C       - for imines
+C1C=CCC=C1    - for norbornadienes
+C1=CCNC=C1    - for diarylethenes
+''')
     mols = args.filename
     mols = list(map(os.path.abspath, mols))
 
