@@ -1,0 +1,68 @@
+[build-sy***REMOVED***m]										
+requires = ["setuptools>=64", "wheel"]                                                  
+build-backend = "setuptools.build_meta"                                                 
+
+[project]                                                                               
+name = "TS_pipeline"                                                                    
+version = "0.9.0"                                                                       
+description = "(Semi)automatic pipeline for TS search in molecular photoswitches"       
+license = "GPL-3.0-or-later"         							
+readme = "README.md"                                                                    
+requires-python = ">=3.10.8"                                                            
+                                                                                        
+authors = [                                                                             
+  { name = "Roman Peshkov", email = "***REMOVED***an.peshkov@kemi.uu.se" },                       
+  { name = "Jorn Steen", email = "***REMOVED***n.***REMOVED***en@kemi.uu.se" }                              
+]                                                                                       
+                                                                                        
+
+                                                                                        
+dependencies = [                                                                        
+  "rdkit==2024.9.6",
+  "pysisyphus==0.7.6.post2",
+  "numpy==1.26.4"
+]
+
+keywords = [
+  "science",
+  "transition state",
+  "computational"
+]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating Sy***REMOVED***m :: Linux",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Scientific/Engineering :: Chemistry",
+  "Topic :: Scientific/Engineering :: Computational Chemistry",
+  "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+[project.urls]
+Homepage = "https://github.com/CrespiLab/TS_pipeline"
+
+[project.scripts]
+tspipe = "ts_pipeline.cli:main"
+
+[tool.setuptools]
+packages = ["ts_pipeline"]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
