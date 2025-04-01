@@ -634,6 +634,18 @@ def get_distance(xyzfile, atom1, atom2):
     except AttributeError as e:
         print(e)
         return None
+
+def orca_user_confirmation():
+    while True:
+        user_input = input("No ORCA template provided for this run, thus it will stop after IRC is done for all TS conformers. Are you sure? (yes/no) [yes]: ")
+        if user_input == "":
+            user_input = "yes"
+        if user_input in ("yes", "y", "no", "n"):
+            break
+        else:
+            print("Invalid input. Please enter 'yes' or 'no'.")
+    if user_input in ("no", "n"):
+        sys.exit('Stopping now because no ORCA template provided, and users reque***REMOVED***d stop')
 #######################################################################
 #######################################################################
 #######################################################################

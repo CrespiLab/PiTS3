@@ -4,7 +4,7 @@ import warnings
 # Tools to check (name: default fallback)
 _REQUIRED_TOOLS = {
     "xtb"  : "",
-    "orca" : "",
+    "orca" : "orca.run",
     "pysis": "",
     "crest": ""
 }

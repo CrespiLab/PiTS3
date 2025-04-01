@@ -3,7 +3,7 @@
 <CDXML
  CreationProgram="ChemDraw 21.0.0.28"
  Name="test2_frag1.cdxml"
- BoundingBox="117.06 121.56 160.44 166.26"
+ BoundingBox="117.05 121.56 160.44 166.25"
  WindowPosition="0 0"
  WindowSize="1073741824 -2147483648"
  WindowIsZoomed="yes"
@@ -86,7 +86,7 @@
 </colortable><fonttable>
 <font id="3" charset="iso-8859-1" name="Arial"/>
 </fonttable><page
- id="89"
+ id="91"
  BoundingBox="0 0 2616 3849"
  HeaderPosition="36"
  FooterPosition="36"
@@ -95,52 +95,59 @@
  WidthPages="5"
 ><fragment
  id="63"
- BoundingBox="117.06 121.56 160.44 166.26"
- Z="4"
+ BoundingBox="117.05 121.56 160.44 166.25"
+ Z="22"
 ><n
  id="60"
  p="117.55 148.68"
- Z="1"
+ Z="20"
  AS="N"
 /><n
  id="62"
  p="117.55 160.01"
- Z="3"
+ Z="21"
  AS="N"
 /><n
  id="64"
  p="127.37 165.68"
- Z="5"
+ Z="23"
  AS="N"
 /><n
  id="66"
  p="137.19 160.01"
- Z="7"
+ Z="24"
  AS="N"
 /><n
  id="68"
  p="137.19 148.68"
- Z="9"
+ Z="25"
  AS="N"
 /><n
  id="70"
  p="127.37 143.01"
- Z="11"
+ Z="26"
  AS="N"
 /><n
  id="78"
  p="147.01 143.01"
- Z="19"
+ Z="33"
+ Element="7"
+ NumHydrogens="0"
+ NeedsClean="yes"
  AS="N"
-/><n
+><t
+ p="143.40 146.91"
+ BoundingBox="143.40 138.57 150.62 146.91"
+ LabelJustification="Left"
+><s font="3" size="10" color="0" face="96">N</s></t></n><n
  id="80"
  p="147.01 131.67"
- Z="21"
+ Z="35"
  AS="N"
 /><n
  id="86"
  p="156.83 126"
- Z="27"
+ Z="37"
  Element="92"
  NumHydrogens="0"
  NeedsClean="yes"
@@ -151,7 +158,7 @@
  LabelJustification="Left"
 ><s font="3" size="10" color="0" face="96">U</s></t></n><b
  id="72"
- Z="13"
+ Z="27"
  B="60"
  E="62"
  Order="2"
@@ -159,13 +166,13 @@
  BondCircularOrdering="77 0 0 73"
 /><b
  id="73"
- Z="14"
+ Z="28"
  B="62"
  E="64"
  BS="N"
 /><b
  id="74"
- Z="15"
+ Z="29"
  B="64"
  E="66"
  Order="2"
@@ -173,13 +180,13 @@
  BondCircularOrdering="73 0 0 75"
 /><b
  id="75"
- Z="16"
+ Z="30"
  B="66"
  E="68"
  BS="N"
 /><b
  id="76"
- Z="17"
+ Z="31"
  B="68"
  E="70"
  Order="2"
@@ -187,19 +194,19 @@
  BondCircularOrdering="75 79 0 77"
 /><b
  id="77"
- Z="18"
+ Z="32"
  B="70"
  E="60"
  BS="N"
 /><b
  id="79"
- Z="20"
+ Z="34"
  B="68"
  E="78"
  BS="N"
 /><b
  id="81"
- Z="22"
+ Z="36"
  B="78"
  E="80"
  Order="2"
@@ -207,7 +214,7 @@
  BondCircularOrdering="79 0 87 0"
 /><b
  id="87"
- Z="28"
+ Z="38"
  B="80"
  E="86"
  BS="N"

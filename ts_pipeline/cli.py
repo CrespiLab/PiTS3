@@ -24,7 +24,7 @@ def main():
                         C-C=N-C       - imines
                         C1C=CCC=C1    - norbornadienes
                         C1=CCNC=C1    - diarylethenes''', required=True)
-    parser.add_argument('-o', '--orca_template', help='ORCA template for ***REMOVED***p 9')
+    parser.add_argument('-o', '--orca_template', help='ORCA template for ***REMOVED***p 9. If empty, stops at stage 8 (pysis IRC for all TS conformers)')
     args = parser.parse_args()
     
     if not args.mode:
@@ -36,9 +36,10 @@ C1=CCNC=C1    - for diarylethenes
 ''')
     mols = args.filename
     mols = list(map(os.path.abspath, mols))
+    if not args.orca_template:
+        tsp.orca_user_confirmation()
 
     for mol in mols:
-
     ####### 0 Detecting key TS node
         match args.mode:
             case 'C-C=C-C' | 'C-C=N-C':
@@ -226,10 +227,13 @@ C1=CCNC=C1    - for diarylethenes
                                   dirname = for_pysis_irc,)
 
         ####### 9 ORCA wB97x-3c Hess + TSOpt + IRC
-        for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
-        tsp.orca_three_points(ircs,
-                              orca_template = args.orca_template,
-                              dirname = for_orca,)
+        if args.orca_template:
+            for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
+            tsp.orca_three_points(ircs,
+                                  orca_template = args.orca_template,
+                                  dirname = for_orca,)
+        else:
+            print(f'Since no ORCA template provided, stopping with the current molecule now.')
 
         os.chdir(start_dir)
 
