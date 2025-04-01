@@ -4,3 +4,4 @@ unsubst_Z
 xtbpipe
 results
 src/__pycache__
+*egg-info*
