@@ -1,0 +1,5 @@
+[console_scripts]
+cdxml_to_xyz = ts_pipeline.utils.cdxml_to_xyz:main
+data_collector = ts_pipeline.core.data_collector:main
+fragments_combiner = ts_pipeline.utils.fragments_combiner:main
+tspipe = ts_pipeline.cli:main

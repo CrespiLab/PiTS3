@@ -1,0 +1,32 @@
+geom:
+ type: dlc
+ fn: [geom_1.xyz, geom_2.xyz]
+preopt:
+cos:
+ type: gs
+ max_nodes: 40
+ climb: True
+opt:
+ type: string
+ align: False
+ max_cycles: 15
+tsopt:
+ type: rsprfo
+ do_hess: True
+ thresh: gau
+ max_cycles: 250
+ hessian_recalc: 1
+ trust_max: 0.1
+ trust_min: 0.01 
+irc:
+ type: eulerpc
+ rms_grad_thresh: 0.0001
+ forward: False
+ backward: False
+calc:
+ type: xtb 
+ pal: 8
+ etemp: 1500
+# alpb: acetonitrile
+ charge: 0
+ mult: 1

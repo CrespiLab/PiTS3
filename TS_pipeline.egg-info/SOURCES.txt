@@ -1,0 +1,16 @@
+LICENSE
+README.md
+pyproject.toml
+setup.py
+./ts_pipeline/__init__.py
+./ts_pipeline/cli.py
+./ts_pipeline/config.py
+TS_pipeline.egg-info/PKG-INFO
+TS_pipeline.egg-info/SOURCES.txt
+TS_pipeline.egg-info/dependency_links.txt
+TS_pipeline.egg-info/entry_points.txt
+TS_pipeline.egg-info/requires.txt
+TS_pipeline.egg-info/top_level.txt
+ts_pipeline/__init__.py
+ts_pipeline/cli.py
+ts_pipeline/config.py

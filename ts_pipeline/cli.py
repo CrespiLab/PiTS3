@@ -2,27 +2,31 @@
 
 import os, shutil, argparse, sys
 import ts_pipeline.core.ts_pipeline as tsp
-import pdb
+f***REMOVED*** ts_pipeline.config import TOOLS as tsp_tools
 
 ### Installation section
-pysis_path = 'pysis'
-xtb_path = 'xtb'
-crest_path = 'crest3'
-orca_path = 'orca.run'
+pysis_path  = tsp_tools["pysis"]
+xtb_path    = tsp_tools["xtb"]
+crest_path  = tsp_tools["crest"]
+orca_path   = tsp_tools["orca"]
 ts_pipe_dir = os.path.dirname(os.path.realpath(__file__))
 
-### Filename parser
-parser = argparse.ArgumentParser(
-                    prog='TS_pipeline',
-                    description='Semi-automatically finds TS for molecular switches',)
+def main():
 
-parser.add_argument('filename', nargs='+', help='XYZ file to process')
-parser.add_argument('-m', '--mode', nargs='?', help='TS mode (coordinate)')
-parser.add_argument('-o', '--orca_template', help='ORCA template for ***REMOVED***p 9')
-args = parser.parse_args()
+    ### Filename parser
+    parser = argparse.ArgumentParser(
+                        prog='TS_pipeline',
+                        description='Semi-automatically finds TS for molecular switches',)
 
-#%%
-if __name__== '__main__':
+    parser.add_argument('filename', nargs='+', help='XYZ file to process')
+    parser.add_argument('-m', '--mode', nargs='?', help='''TS mode (coordinate). Available options:
+                        C-C=C-C       - stilbenes
+                        C-C=N-C       - imines
+                        C1C=CCC=C1    - norbornadienes
+                        C1=CCNC=C1    - diarylethenes''', required=True)
+    parser.add_argument('-o', '--orca_template', help='ORCA template for ***REMOVED***p 9')
+    args = parser.parse_args()
+    
     if not args.mode:
         sys.exit(f'''TS mode is not found! Select one of the available options:
 C-C=C-C       - for stilbenes
@@ -33,10 +37,9 @@ C1=CCNC=C1    - for diarylethenes
     mols = args.filename
     mols = list(map(os.path.abspath, mols))
 
-
     for mol in mols:
 
-####### 0 Detecting key TS node
+    ####### 0 Detecting key TS node
         match args.mode:
             case 'C-C=C-C' | 'C-C=N-C':
                 dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
@@ -100,21 +103,21 @@ C1=CCNC=C1    - for diarylethenes
                     print(f'Reque***REMOVED***d SMILES {args.mode} not found in the molecule, exiting')
                     sys.exit('No key TS mode provided (arg -m) or it is not recognized, exiting')
 
-####### Saving starting dir
+    ####### Saving starting dir
         start_dir = os.getcwd()
         mol_dir = tsp.mkbasedir(mol, ignore_existing=True)
         shutil.copy(mol, mol_dir)
         os.chdir(mol_dir)
-####### 1 Optimization
+    ####### 1 Optimization
         opt_dir = tsp.mkbasedir(mol, prefix='1_', suffix='_xtb_opt')
         optimized = tsp.xtb_opt(mol, 
                                 dirname=opt_dir,  
                                 optlev='--optlev extreme',
                                 etemp='--etemp 1500')
-##                                solvent='--alpb acetonitrile',)
+    ##                                solvent='--alpb acetonitrile',)
          
 
-####### 2 Scan
+    ####### 2 Scan
         scan_dir = tsp.mkbasedir(mol, prefix='2_', suffix='_xtb_scan')
         match args.mode:
             case 'C-C=C-C' | 'C-C=N-C':
@@ -145,21 +148,21 @@ C1=CCNC=C1    - for diarylethenes
                                            etemp='--etemp 1500',)
 
         
-####### 3 Second dia***REMOVED***reomer reopt
+        ####### 3 Second dia***REMOVED***reomer reopt
         m_opt_dir = tsp.mkbasedir(mol, prefix='3_', suffix='_xtb_scan_reopt')
         scan_reoptimized = tsp.xtb_opt(scanned, 
                                        dirname=m_opt_dir,
                                        optlev='--optlev extreme',
                                        etemp='--etemp 1500',)
-#                                    solvent='--alpb acetonitrile',)
-####### 4 Pysis growing string to find TS between E and Z
+        #                                    solvent='--alpb acetonitrile',)
+        ####### 4 Pysis growing string to find TS between E and Z
         for_pysis = tsp.mkbasedir(mol, prefix='4_', suffix='_pysis')
         TS = tsp.pysis_gs(f'{ts_pipe_dir}/templates/TS_10_nodes.yaml',
                           optimized, 
                           scan_reoptimized, 
                           dirname=for_pysis)
                           
-####### 4.5 Intermediate TS geometry check
+        ####### 4.5 Intermediate TS geometry check
         match args.mode:
             case 'C-C=C-C':
                 check_dih_value = tsp.get_dihedral(TS, *dihedral_nums)
@@ -196,39 +199,43 @@ C1=CCNC=C1    - for diarylethenes
                     print(f'Key parameter, distance {distance1} = {check_adae_distance}, it is too short and close to closed form, starting the next molecule (or stopping)')
                     continue
 
-####### 5 Constrained sampling with CREST
+        ####### 5 Constrained sampling with CREST
         for_TS_sampling = tsp.mkbasedir(mol, prefix='5_', suffix='_TS_sampling', )
         TS_conformers = tsp.crest_constrained_sampling(TS,
                                                        dirname=for_TS_sampling, 
                                                        constrain_atoms=constraint,
                                                        optlev='--extreme',)
-######################################################  dlen='--len x3', mdlen='--mdlen x3')
+        ######################################################  dlen='--len x3', mdlen='--mdlen x3')
                                                       # solvent='--alpb acetonitrile',
-####### 6 Pysis to reoptimize all TS conformers
+        ####### 6 Pysis to reoptimize all TS conformers
         for_pysis_TS_reopt = tsp.mkbasedir(mol, prefix='6_', suffix='_pysis_TS_reopt')
         reoptimized_TSes = tsp.pysis_ts_reopt(f'{ts_pipe_dir}/templates/TS_reopt.yaml', 
                                               TS_conformers, 
                                               dirname = for_pysis_TS_reopt,
                                               concat_breaks=True)
         
-####### 7 CREGEN of reoptimized TSes
+        ####### 7 CREGEN of reoptimized TSes
         for_cregen = tsp.mkbasedir(mol, prefix = '7_', suffix = '_optmized_TS_cregen')
         cregened_ensemble = tsp.cregen(reoptimized_TSes, dirname = for_cregen)
         
-####### 8 Pysis IRC
+        ####### 8 Pysis IRC
         for_pysis_irc = tsp.mkbasedir(mol, prefix = '8_', suffix = '_filtered_TS_irc')
         cregened_ensemble = shutil.copy(cregened_ensemble, f'{for_pysis_irc}/cregened_conformers.xyz')
         ircs = tsp.pysis_ts_irc(f'{ts_pipe_dir}/templates/TS_reopt_irc.yaml',
                                   xyz = cregened_ensemble,
                                   dirname = for_pysis_irc,)
 
-####### 9 ORCA wB97x-3c Hess + TSOpt + IRC
+        ####### 9 ORCA wB97x-3c Hess + TSOpt + IRC
         for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
         tsp.orca_three_points(ircs,
                               orca_template = args.orca_template,
                               dirname = for_orca,)
-#                              control_ang = angle_CNC_nums,
-#                              control_ang_range = [100,140])
 
         os.chdir(start_dir)
+
+
+
+
+if __name__== '__main__':
+    main()
         

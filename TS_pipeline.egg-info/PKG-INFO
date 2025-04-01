@@ -1,0 +1,87 @@
+Metadata-Version: 2.4
+Name: TS_pipeline
+Version: 0.9.0
+Summary: (Semi)automatic pipeline for TS search in molecular photoswitches
+Home-page: https://github.com/CrespiLab/TS_pipeline
+Author: Roman Peshkov, Jorn Steen
+Author-email: Roman Peshkov <***REMOVED***an.peshkov@kemi.uu.se>, Jorn Steen <***REMOVED***n.***REMOVED***en@kemi.uu.se>
+License-Expression: GPL-3.0-or-later
+Project-URL: Homepage, https://github.com/CrespiLab/TS_pipeline
+Keywords: science,transition state,computational
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating Sy***REMOVED***m :: Linux
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: Topic :: Scientific/Engineering :: Chemistry
+Classifier: Topic :: Scientific/Engineering :: Computational Chemistry
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.1
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: rdkit==2024.9.6
+Requires-Dist: pysisyphus==0.7.6.post2
+Requires-Dist: numpy==1.26.4
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
+
+# TS_pipeline
+**March 31st, 2025**
+
+ (Semi)automatic pipeline for transition state (TS) search in molecular photoswitches.
+
+## Installation Instructions
+### Local
+```
+python -m venv TS_pipeline.venv
+git clone git@github.com:CrespiLab/TS_pipeline
+source TS_pipeline.venv/bin/activate
+sudo apt install libopenbabel-dev swig
+pip install openbabel --global-option=build_ext --global-option="-I/usr/include/openbabel3" --global-option="-L/usr/lib/x86_64-linux-gnu/openbabel/3.1.1/"
+cd TS_pipeline
+pip install .
+```
+Adjust according to your folder structure:
+--global-option="-I/usr/include/openbabel3" and --global-option="-L/usr/lib/x86_64-linux-gnu/openbabel/3.1.1/"
+
+### Programmes required
+These programmes need to be callable f***REMOVED*** the command-line.
+If not: adjust config.py and add paths to programmes.
+- OpenBabel
+If you need to compile it, see here:
+
+- xTB
+
+-  CREST
+
+-  ORCA
+
+
+
+### Clu***REMOVED***r
+
+
+
+
+## TEST
+```
+../../../src/fragments_combiner.py nbd_*
+
+../../../main.py C12H9NS.xyz
+../../../main.py C12H9NS.xyz -m "TSModeFragment"
+../../../main.py C12H9NS.xyz -m 'C1C=CCC=C1'
+
+```
+
+## Instructions
+### Fragments Combiner Tool
+
+### TS Mode Selection
+The tool 
+
+## RUN
+### Local
+main.py *.xyz | tee output.log
+
+

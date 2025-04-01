@@ -1,0 +1,65 @@
+*xyzfile 0 1 %ts_geom.xyz%
+%pal
+  nproc 8
+end
+%maxcore 3000
+
+%Compound
+# Step 1: hessian for pysisyphus geometry (xtb/gfn2)
+New_Step
+  ! xTB Freq
+Step_End
+
+# Step 2: geometry optimization
+New_Step
+  ! UKS wB97x-3c OptTS
+  %scf
+    BrokenSym 1,1
+	Guess PModel
+  end
+  %geom
+    InHess Read
+    InHessName "orca_Compound_1.hess"
+  end
+Step_End
+
+# Step 3: hessian at DFT-reoptimized geometry
+New_Step
+  ! UKS wB97x-3c AnFreq
+  %scf
+    BrokenSym 1,1
+  end
+Step_End
+
+# Step 4: SP of optimized TS
+New_Step
+  ! wB97x-d4 def2-tzvp
+  %scf
+    BrokenSym 1,1
+  end
+Step_End
+
+# Step 5: Optimization of forward end f***REMOVED*** pysisyphus
+New_Step
+  ! wB97x-3c Opt Freq
+  *xyzfile 0 1 %irc_F.xyz%
+Step_End
+
+# Step 6: SP of optimized forward end
+New_Step
+  ! wB97x-d4 def2-tzvp
+Step_End
+
+# Step 7: Optimization of backward end f***REMOVED*** pysisyphus
+New_Step
+  ! wB97x-3c Opt Freq
+  *xyzfile 0 1 %irc_B.xyz%
+Step_End
+
+# Step 8: SP of optimized of backward end
+New_Step
+  ! wB97x-d4 def2-tzvp
+Step_End
+
+
+end

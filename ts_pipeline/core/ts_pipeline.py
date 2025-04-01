@@ -4,14 +4,14 @@ import os, re, shutil, sys, glob
 f***REMOVED*** openbabel import pybel
 f***REMOVED*** rdkit import Chem
 f***REMOVED*** rdkit.Chem import rdmolfiles, rdDetermineBonds, rdMolTransforms
-
-
+f***REMOVED*** ts_pipeline.config import TOOLS as tsp_tools
 
 ### Installation section
-pysis_path = 'pysis'
-xtb_path = 'xtb'
-crest_path = 'crest3'
-orca_path = 'orca.run'
+pysis_path  = tsp_tools["pysis"]
+xtb_path    = tsp_tools["xtb"]
+crest_path  = tsp_tools["crest"]
+orca_path   = tsp_tools["orca"]
+ts_pipe_dir = os.path.dirname(os.path.realpath(__file__))
 
 #%%
 ### Functions section
@@ -639,7 +639,7 @@ def get_distance(xyzfile, atom1, atom2):
 #######################################################################
 
 if __name__== '__main__':
-    print(' is module, not a script!')
+    print('This is module, not a script!')
     
     
     

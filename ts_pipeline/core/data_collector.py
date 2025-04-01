@@ -1,26 +1,17 @@
 #!/usr/bin/env python3
 
 import os, sys, re, argparse, pdb, glob, pprint, json
-import TS_pipe as tsp
+import ts_pipeline.core.ts_pipeline as tsp
 f***REMOVED*** rdkit import Chem
 f***REMOVED*** rdkit.Chem import rdmolfiles
 f***REMOVED*** openbabel import pybel
 
-parser = argparse.ArgumentParser(
-                    prog='TS_pipeline',
-                    description='Data scraper for TS_pipeline',)
-
-parser.add_argument('filename', nargs='+', help='XYZ file to process')
-parser.add_argument('-m', '--mode', nargs='?', help='TS mode (coordinate)')
-parser.add_argument('-d', '--dump', nargs='?', help='Filename for json dump of final dictionary')
-
-args = parser.parse_args()
-
-path_to_structures = {  'C-C=C-C'               : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/stilbenes',      # stilbenes
-                        'C-C=N-C'               : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/imines',         # imines
-                        'Greenfield C-C=N-C'    : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/greenfield',     # Greenfield imines
-                        'C1C=CCC=C1'            : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/nbds',           # norbornadienes
-                        'C1=CCNC=C1'            : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/adaes_closed',}  # ADAEs
+#ts_pipe_dir = os.path.dirname(os.path.realpath(__file__))
+#path_to_structures = {  'C-C=C-C'               : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/stilbenes',      # stilbenes
+#                        'C-C=N-C'               : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/imines',         # imines
+#                        'Greenfield C-C=N-C'    : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/greenfield',     # Greenfield imines
+#                        'C1C=CCC=C1'            : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/nbds',           # norbornadienes
+#                        'C1=CCNC=C1'            : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/adaes_closed',}  # ADAEs
 
 def readmol(xyzfile, chrg=0, sanitize=True):
     """
@@ -32,8 +23,17 @@ def readmol(xyzfile, chrg=0, sanitize=True):
     mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), sanitize=sanitize)
     return mol
 
+def main():
+    parser = argparse.ArgumentParser(
+                        prog='TS_pipeline',
+                        description='Data scraper for TS_pipeline',)
 
-if __name__== '__main__':
+    parser.add_argument('filename', nargs='+', help='XYZ file to process')
+    parser.add_argument('-m', '--mode', nargs='?', help='TS mode (coordinate)')
+    parser.add_argument('-d', '--dump', nargs='?', help='Filename for json dump of final dictionary')
+
+    args = parser.parse_args()
+    
     mols = args.filename
     data_collector = {}
     for mol in mols:
@@ -211,3 +211,5 @@ if __name__== '__main__':
         json.dump(data_collector, json_file, indent=4)
     pprint.pprint(data_collector)
     
+if __name__== '__main__':
+    main()

@@ -7,14 +7,6 @@ f***REMOVED*** rdkit.Chem import AllChem, rdMolDescriptors, Draw
 f***REMOVED*** rdkit.Chem.rdmolfiles import MolsF***REMOVED***CDXMLFile
 f***REMOVED*** collections import defaultdict
 
-### Filename parser
-parser = argparse.ArgumentParser(
-                    prog='TS_pipeline - fragments combiner',
-                    description='Combines molecular fragments f***REMOVED*** two .cdxml documents thorugh U-marked attachment points',)
-
-parser.add_argument('filename', nargs='+', help='XYZ file to process')
-args = parser.parse_args()
-
 def merge_molecules(mol1, mol2, bond_type=Chem.BondType.SINGLE):
     """
     Merges two molecules by removing the 'U' attachment points and connecting
@@ -83,48 +75,59 @@ def get_unique_filename(base_name, ext=".xyz"):
     return unique_name
 
 
-if len(args.filename) != 2:
-    print('List of files submitted:')
-    print(f'{file}\n' for file in args.filename)
-    print('Please provide exactly TWO fragment files')
+def main():
+    ### Filename parser
+    parser = argparse.ArgumentParser(
+                        prog='TS_pipeline - fragments combiner',
+                        description='Combines molecular fragments f***REMOVED*** two .cdxml documents thorugh U-marked attachment points',)
 
-molecules_1 = [mol for mol in MolsF***REMOVED***CDXMLFile(args.filename[0]) if mol is not None]
-molecules_2 = [mol for mol in MolsF***REMOVED***CDXMLFile(args.filename[1]) if mol is not None]
+    parser.add_argument('filename', nargs='+', help='XYZ file to process')
+    args = parser.parse_args()
+    if len(args.filename) != 2:
+        print('List of files submitted:')
+        print(f'{file}\n' for file in args.filename)
+        print('Please provide exactly TWO fragment files')
 
-smiles = []
-merged_molecules = []
-names = []
-#for frag1, frag2 in itertools.product(molecules_1, molecules_2):
-for frag1 in molecules_1:
-    for frag2 in molecules_2:
-        try:
-            merged = merge_molecules(frag1, frag2, Chem.BondType.SINGLE)
-            merged = Chem.AddHs(merged)
-            AllChem.Compute2DCoords(merged)
-            merged_molecules.append(merged)
-            smiles.append(Chem.MolToSmiles(merged))
-        except Exception as e:
-            print("Failed to merge a pair of fragments:", e)
+    molecules_1 = [mol for mol in MolsF***REMOVED***CDXMLFile(args.filename[0]) if mol is not None]
+    molecules_2 = [mol for mol in MolsF***REMOVED***CDXMLFile(args.filename[1]) if mol is not None]
 
-for smile in smiles:
-    mol = Chem.MolF***REMOVED***Smiles(smile)
-    if mol is None:
-        print(f"Skipping invalid SMILES: {smile}")
-        continue
-    mol = Chem.AddHs(mol)
-    AllChem.EmbedMolecule(mol, useExpTorsionAnglePrefs=True, useBasicKnowledge=True)
-#    AllChem.MMFFOptimizeMolecule(mol)
-    AllChem.UFFOptimizeMolecule(mol)
-    formula = rdMolDescriptors.CalcMolFormula(mol)
-    file_name = get_unique_filename(formula)
-    names.append(file_name)
-    xyz_block = Chem.MolToXYZBlock(mol)
-    with open(file_name, "w") as f:
-        f.write(xyz_block)
+    smiles = []
+    merged_molecules = []
+    names = []
+    #for frag1, frag2 in itertools.product(molecules_1, molecules_2):
+    for frag1 in molecules_1:
+        for frag2 in molecules_2:
+            try:
+                merged = merge_molecules(frag1, frag2, Chem.BondType.SINGLE)
+                merged = Chem.AddHs(merged)
+                AllChem.Compute2DCoords(merged)
+                merged_molecules.append(merged)
+                smiles.append(Chem.MolToSmiles(merged))
+            except Exception as e:
+                print("Failed to merge a pair of fragments:", e)
 
-    print(f"Saved: {file_name}")
+    for smile in smiles:
+        mol = Chem.MolF***REMOVED***Smiles(smile)
+        if mol is None:
+            print(f"Skipping invalid SMILES: {smile}")
+            continue
+        mol = Chem.AddHs(mol)
+        AllChem.EmbedMolecule(mol, useExpTorsionAnglePrefs=True, useBasicKnowledge=True)
+    #    AllChem.MMFFOptimizeMolecule(mol)
+        AllChem.UFFOptimizeMolecule(mol)
+        formula = rdMolDescriptors.CalcMolFormula(mol)
+        file_name = get_unique_filename(formula)
+        names.append(file_name)
+        xyz_block = Chem.MolToXYZBlock(mol)
+        with open(file_name, "w") as f:
+            f.write(xyz_block)
 
-#legends = list(f'{name}\n{smile}' for name, smile in zip(names, smiles))
-legends = names
-img = Draw.MolsToGridImage(merged_molecules, molsPerRow=3, subImgSize=(300, 200), legends=legends)
-img.save('last_generation.png')
+        print(f"Saved: {file_name}")
+
+    #legends = list(f'{name}\n{smile}' for name, smile in zip(names, smiles))
+    legends = names
+    img = Draw.MolsToGridImage(merged_molecules, molsPerRow=3, subImgSize=(300, 200), legends=legends)
+    img.save('last_generation.png')
+    
+if __name__ == '__main__':
+    main()
