@@ -10,7 +10,8 @@ python -m venv TS_pipeline.venv
 git clone https://github.com/CrespiLab/TS_pipeline/
 source TS_pipeline.venv/bin/activate
 sudo apt install libopenbabel-dev swig
-pip install openbabel --global-option=build_ext --global-option="-I/usr/include/openbabel3" --global-option="-L/usr/lib/x86_64-linux-gnu/openbabel/3.1.1/"
+pip install openbabel --global-option=build_ext --global-option="-I/usr/include/openbabel3" \
+                      --global-option="-L/usr/lib/x86_64-linux-gnu/openbabel/3.1.1/"
 cd TS_pipeline
 pip install -e .
 ```
@@ -18,15 +19,11 @@ Adjust according to your folder structure:
 --global-option="-I/usr/include/openbabel3" and --global-option="-L/usr/lib/x86_64-linux-gnu/openbabel/3.1.1/"
 
 ### Programmes required
-These programmes need to be callable f***REMOVED*** the command-line.
+These programmes need to be callable f***REMOVED*** the command-line (i.e. should be available in your PATH).
 If not: adjust config.py and add paths to programmes.
 - OpenBabel
-If you need to compile it, see here:
-
 - xTB
-
 -  CREST
-
 -  ORCA
 
 
@@ -35,8 +32,9 @@ If you need to compile it, see here:
 
 
 
+# *TBD*
 
-## TEST
+##TEST
 ```
 ../../../src/fragments_combiner.py nbd_*
 
