@@ -38,7 +38,9 @@ C1=CCNC=C1    - for diarylethenes
     mols = list(map(os.path.abspath, mols))
     if not args.orca_template:
         tsp.orca_user_confirmation()
-
+    else:
+        tsp.confirm_orca_template_exists(args.orca_template)
+        
     for mol in mols:
     ####### 0 Detecting key TS node
         match args.mode:

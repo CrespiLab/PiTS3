@@ -6,13 +6,6 @@ f***REMOVED*** rdkit import Chem
 f***REMOVED*** rdkit.Chem import rdmolfiles
 f***REMOVED*** openbabel import pybel
 
-#ts_pipe_dir = os.path.dirname(os.path.realpath(__file__))
-#path_to_structures = {  'C-C=C-C'               : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/stilbenes',      # stilbenes
-#                        'C-C=N-C'               : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/imines',         # imines
-#                        'Greenfield C-C=N-C'    : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/greenfield',     # Greenfield imines
-#                        'C1C=CCC=C1'            : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/nbds',           # norbornadienes
-#                        'C1=CCNC=C1'            : '/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/data/structures/adaes_closed',}  # ADAEs
-
 def readmol(xyzfile, chrg=0, sanitize=True):
     """
     Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
@@ -22,29 +15,44 @@ def readmol(xyzfile, chrg=0, sanitize=True):
     mol = next(pybel.readfile('xyz', xyzfile))
     mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), sanitize=sanitize)
     return mol
+    
+def remove_trailing_slash(directory):
+    if directory != '/' and directory.endswith('/'):
+        return directory.rstrip('/')
+    return directory
 
 def main():
     parser = argparse.ArgumentParser(
                         prog='TS_pipeline',
                         description='Data scraper for TS_pipeline',)
-
-    parser.add_argument('filename', nargs='+', help='XYZ file to process')
-    parser.add_argument('-m', '--mode', nargs='?', help='TS mode (coordinate)')
-    parser.add_argument('-d', '--dump', nargs='?', help='Filename for json dump of final dictionary')
-
+    parser.add_argument('dirname', nargs='?', help='Directory(-ies) to scrape data f***REMOVED***')
+    parser.add_argument('-m', '--mode', nargs='?', help='''TS mode (coordinate). Available options:
+                        C-C=C-C       - stilbenes
+                        C-C=N-C       - imines
+                        C1C=CCC=C1    - norbornadienes
+                        C1=CCNC=C1    - diarylethenes''', required=True)
+    parser.add_argument('-d', '--dump', nargs='?', help='Filename for json dump of final dictionary', 
+                        default = f'{os.path.basename(os.getcwd())}_dump.json')
+    parser.add_argument('--individual', action = 'store_true', help='Write individual json dumps for each molecule in***REMOVED***ad on accumulated one')
     args = parser.parse_args()
     
-    mols = args.filename
+    if not args.dirname:
+        print('Since no directories provided, I try to scrape f***REMOVED*** all directories in the current working directory.')
+        cwd = os.getcwd()
+        directories = [d for d in os.listdir(cwd) if os.path.isdir(os.path.join(cwd, d))]
+        print(f'The following directories are found and are to be screped f***REMOVED***: {directories}')
+        mols = directories
+        
+    else:
+        mols = args.dirname
+    mols = list(map(remove_trailing_slash, mols))
     data_collector = {}
     for mol in mols:
         try:
-            name=re.split(r'\.', os.path.basename(mol))[0]
+            name=mol
             data_collector[name] = {}
             data_collector[name]['TS mode'] = args.mode
-            if not args.mode:
-                sys.exit(f'No TS mode selected (argument -m), choose f***REMOVED*** {list(path_to_structures.keys())}')
-            mol_path = path_to_structures[args.mode] + f'/{name}.xyz'
-            
+            mol_path = f'{name}/{name}.xyz'
     ####### 0 Detecting key TS node
             match args.mode:
                 case 'C-C=C-C':
@@ -205,11 +213,16 @@ def main():
             print(e)
         except IndexError as e:
             print(e)
-        
-    print(f'length of the data collector dictionary: {len(data_collector)}')
-    with open(args.dump, 'w') as json_file:
-        json.dump(data_collector, json_file, indent=4)
-    pprint.pprint(data_collector)
-    
+    if args.individual == False:
+        print(f'length of the data collector dictionary: {len(data_collector)}')
+        with open(args.dump, 'w') as json_file:
+            json.dump(data_collector, json_file, indent=4)
+    else:
+#        breakpoint()
+        for key, value in data_collector.items():
+            individual_dict = {}
+            individual_dict[key] = value
+            with open(f'{key}.json', 'w') as json_file:
+                json.dump(individual_dict, json_file, indent=4)
 if __name__== '__main__':
     main()

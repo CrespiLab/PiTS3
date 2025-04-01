@@ -646,6 +646,20 @@ def orca_user_confirmation():
             print("Invalid input. Please enter 'yes' or 'no'.")
     if user_input in ("no", "n"):
         sys.exit('Stopping now because no ORCA template provided, and users reque***REMOVED***d stop')
+def confirm_orca_template_exists(orca_template_file):
+    while True:
+        if os.path.isfile(orca_template_file):
+            break
+        else:
+            print(f'ORCA template {orca_template_file} not found, trying to find similar template in ts_pipeline/templates...')
+            template_dir = os.path.abspath(f'{ts_pipe_dir}/../templates')
+            if os.path.isfile(f'{template_dir}/{os.path.basename(orca_template_file)}'):
+                confirmation = input(f'Found {os.path.basename(orca_template_file)} in {template_dir}, confirm? [yes] ')
+                if 'y' in confirmation or not confirmation:
+                    break
+                elif 'n' in confirmation:
+                    sys.exit('Aborting')
+            
 #######################################################################
 #######################################################################
 #######################################################################
