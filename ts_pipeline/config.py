@@ -37,4 +37,4 @@ pysis_path = TOOLS["pysis"]
 crest_path = TOOLS["crest"]
 
 print('All tools loaded:')
-pprint.pprint(TOOLS)
+pprint.pprint(TOOLS, indent=4)
