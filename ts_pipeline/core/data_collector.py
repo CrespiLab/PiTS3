@@ -37,10 +37,10 @@ def main():
     args = parser.parse_args()
     
     if not args.dirname:
-        print('Since no directories provided, I try to scrape f***REMOVED*** all directories in the current working directory.')
+        print('Since no directories provided, trying to scrape f***REMOVED*** all directories in the current working directory.')
         cwd = os.getcwd()
         directories = [d for d in os.listdir(cwd) if os.path.isdir(os.path.join(cwd, d))]
-        print(f'The following directories are found and are to be screped f***REMOVED***: {directories}')
+        print(f'The following directories are found and are to be scraped f***REMOVED***: {directories}')
         mols = directories
         
     else:
@@ -214,7 +214,7 @@ def main():
         except IndexError as e:
             print(e)
     if args.individual == False:
-        print(f'length of the data collector dictionary: {len(data_collector)}')
+        print(f'Final length of the data collector for {mols}: {len(data_collector)}')
         with open(args.dump, 'w') as json_file:
             json.dump(data_collector, json_file, indent=4)
     else:
