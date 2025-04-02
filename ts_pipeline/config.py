@@ -1,11 +1,17 @@
+# This is config file for ts_pipeline tool.
+# If you have all the tools available in your global PATH, you do not have to change anything here.
+# If you use more than one version of any of these tools, we recommend providing valid paths to desired versions.
+# If user-defined paths is invalid, the config file will try to find them in your PATH by running "which" with default names (i.e., "orca", "xtb", "pysis" and "crest").
+# If user-configured paths are invalid, you will keep seeing user warnings, but you can ignore them.
+
 import shutil, sys, warnings, pprint
 
 # Tools to check (name: default fallback)
 _REQUIRED_TOOLS = {
-    "xtb"  : "xtb",
-    "orca" : "orca.run",
-    "pysis": "pysis",
-    "crest": "crest"
+    "xtb"  : "",
+    "orca" : "",
+    "pysis": "",
+    "crest": ""
 }
 
 # Build resolved paths or fallback
