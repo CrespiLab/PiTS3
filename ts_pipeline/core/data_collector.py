@@ -25,15 +25,16 @@ def main():
     parser = argparse.ArgumentParser(
                         prog='TS_pipeline',
                         description='Data scraper for TS_pipeline',)
-    parser.add_argument('dirname', nargs='?', help='Directory(-ies) to scrape data f***REMOVED***')
+    parser.add_argument('dirname', nargs='*', help='Directory(-ies) to scrape data f***REMOVED***')
     parser.add_argument('-m', '--mode', nargs='?', help='''TS mode (coordinate). Available options:
-                        C-C=C-C       - stilbenes
-                        C-C=N-C       - imines
-                        C1C=CCC=C1    - norbornadienes
+                        C-C=C-C       - stilbenes;
+                        C-C=N-C       - imines;
+                        C1C=CCC=C1    - norbornadienes;
                         C1=CCNC=C1    - diarylethenes''', required=True)
     parser.add_argument('-d', '--dump', nargs='?', help='Filename for json dump of final dictionary', 
-                        default = f'{os.path.basename(os.getcwd())}_dump.json')
+                        default = f'{os.path.basename(os.getcwd())}')
     parser.add_argument('--individual', action = 'store_true', help='Write individual json dumps for each molecule in***REMOVED***ad on accumulated one')
+    parser.add_argument('-v', '--verbose', action = 'store_true', help='Verbose printing for debug')
     args = parser.parse_args()
     
     if not args.dirname:
@@ -42,9 +43,10 @@ def main():
         directories = [d for d in os.listdir(cwd) if os.path.isdir(os.path.join(cwd, d))]
         print(f'The following directories are found and are to be scraped f***REMOVED***: {directories}')
         mols = directories
-        
     else:
         mols = args.dirname
+    if '.json' in args.dump:
+        args.dump = os.path.splitext(path)[0]
     mols = list(map(remove_trailing_slash, mols))
     data_collector = {}
     for mol in mols:
@@ -133,7 +135,7 @@ def main():
                         distance = tsp.get_distance(curr_pysis_conf, *adae_chain_nums[2:4])
                         data_collector[name]['pysis conformers properties'][curr_pysis_conf]['TS conformer key value'] = distance
                     
-    ####### 3 Checking orca        
+    ####### 3 Checking orca generated data
             data_collector[name]['orca input conformers number'] = len(glob.glob(f'{name}/9_*/cregened_conformers*reopt'))
             data_collector[name]['orca output conformers'] = glob.glob(f'{name}/9_*/cregened_conformers*reopt')
             data_collector[name]['orca output conformers number'] = len(data_collector[name]['orca output conformers'])
@@ -181,20 +183,19 @@ def main():
                         data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS conformer key value'] = dih_value_TS
                         data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 conformer key value'] = dih_value_reac1
                         data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 conformer key value'] = dih_value_reac2
-                    case 'C-C=N-C':
+                    case 'C-C=N-C' | 'Greenfield C-C=N-C':
+                        dih_value_TS = tsp.get_dihedral(f'{curr_orca_dir}/cregened_conformers_Compound_2.xyz', *dihedral_nums)
+                        dih_value_reac1 = tsp.get_dihedral(f'{curr_orca_dir}/cregened_conformers_Compound_4.xyz', *dihedral_nums)
+                        dih_value_reac2 = tsp.get_dihedral(f'{curr_orca_dir}/cregened_conformers_Compound_5.xyz', *dihedral_nums)
                         ang_value_TS = tsp.get_angle(f'{curr_orca_dir}/cregened_conformers_Compound_2.xyz', *dihedral_nums[1:])
                         ang_value_reac1 = tsp.get_angle(f'{curr_orca_dir}/cregened_conformers_Compound_4.xyz', *dihedral_nums[1:])
                         ang_value_reac2 = tsp.get_angle(f'{curr_orca_dir}/cregened_conformers_Compound_5.xyz', *dihedral_nums[1:])
                         data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS conformer key value'] = ang_value_TS
                         data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 conformer key value'] = ang_value_reac1
                         data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 conformer key value'] = ang_value_reac2
-                    case 'Greenfield C-C=N-C':
-                        ang_value_TS = tsp.get_angle(f'{curr_orca_dir}/cregened_conformers_Compound_2.xyz', *dihedral_nums[1:])
-                        ang_value_reac1 = tsp.get_angle(f'{curr_orca_dir}/cregened_conformers_Compound_4.xyz', *dihedral_nums[1:])
-                        ang_value_reac2 = tsp.get_angle(f'{curr_orca_dir}/cregened_conformers_Compound_5.xyz', *dihedral_nums[1:])
-                        data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS conformer key value'] = ang_value_TS
-                        data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 conformer key value'] = ang_value_reac1
-                        data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 conformer key value'] = ang_value_reac2
+                        data_collector[name]['orca conformers properties'][curr_orca_dir]['orca TS conformer dih value'] = dih_value_TS
+                        data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 conformer dih value'] = dih_value_reac1
+                        data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 conformer dih value'] = dih_value_reac2
                     case 'C1C=CCC=C1':
                         dist_value_TS = [tsp.get_distance(f'{curr_orca_dir}/cregened_conformers_Compound_2.xyz', *cyclohexadiene_nums[1::4]), tsp.get_distance(f'{curr_orca_dir}/cregened_conformers_Compound_2.xyz', *cyclohexadiene_nums[2::2])]
                         dist_value_reac1 = [tsp.get_distance(f'{curr_orca_dir}/cregened_conformers_Compound_4.xyz', *cyclohexadiene_nums[1::4]), tsp.get_distance(f'{curr_orca_dir}/cregened_conformers_Compound_4.xyz', *cyclohexadiene_nums[2::2])]
@@ -210,19 +211,108 @@ def main():
                         data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 conformer key value'] = dist_value_reac1
                         data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 conformer key value'] = dist_value_reac2
         except FileNotFoundError as e:
-            print(e)
+            if args.verbose: print(e)
         except IndexError as e:
-            print(e)
+            if args.verbose: print(e)
     if args.individual == False:
-        print(f'Final length of the data collector for {mols}: {len(data_collector)}')
-        with open(args.dump, 'w') as json_file:
+        print(f'Final length of the data collector {len(data_collector)}, that includes: {mols}')
+        with open(f'{args.dump}.json', 'w') as json_file:
             json.dump(data_collector, json_file, indent=4)
     else:
-#        breakpoint()
         for key, value in data_collector.items():
             individual_dict = {}
             individual_dict[key] = value
             with open(f'{key}.json', 'w') as json_file:
                 json.dump(individual_dict, json_file, indent=4)
+    ####### 4 Processing collected data
+#    conformers_by_orca_count = df['pysis output conformers number'].sum()
+#    conformers_to_orca_count = df['orca input conformers number'].sum()
+    conformers_to_orca_total = 0
+    conformers_f***REMOVED***_orca_total = 0
+    failed_orca_count_total = 0
+    failed_orca_list_total = []
+    energies_dict = {}
+    for mol, d in data_collector.items():
+        metastable_Es = []
+        TS_Es = []
+        conformers_to_orca = 0
+        conformers_f***REMOVED***_orca = 0
+        failed_orca_count = 0
+        failed_orca_list = []
+        for j, conf in enumerate(d['orca output conformers']):
+            try:
+                # Checks if properties entry exists for given conf and if all properties dictionary are non-empty
+                if not d['orca conformers properties'][conf] or sum(1 for value in d['orca conformers properties'][conf].values() if value) != len(d['orca conformers properties'][conf].values()):
+                    if args.verbose: print(f'Some properties for conformer {conf} are not found, skipping')
+                    failed_orca_count += 1
+                    failed_orca_list.append(conf)
+                    continue
+            except KeyError as e:
+                print(f'Conformer {conf} is missing')
+                if args.verbose: print(e)
+                continue
+            match args.mode:
+                # Selecting isomer with smaller dihedral as metastable
+                case 'C-C=C-C' | 'C-C=N-C':
+                    if abs(d['orca conformers properties'][conf]['orca reac1 conformer dih value']) < abs(d['orca conformers properties'][conf]['orca reac2 conformer dih value']):
+                        metastable = 'reac1'
+                    else:
+                        metastable = 'reac2'
+                    if args.verbose: print('For conf {conf} Structure with C=N-C angle', 
+                          d['orca conformers properties'][conf][f'orca {metastable} conformer key value'],
+                          'and C-C=N-C dihedral',
+                          d['orca conformers properties'][conf][f'orca {metastable} conformer dih value'],
+                          'selected as metastable')
+                # Selecting isomer with shorter C-C distances as metastable
+                case 'C1C=CCC=C1':
+                    if all(d['orca conformers properties'][conf]['orca reac1 conformer key value'][n] < 1.8 for n in [0,1]):
+                        metastable = 'reac1'
+                    else:
+                        metastable = 'reac2'
+                    if args.verbose: print('Structure with shorter C-C distances', 
+                          d['orca conformers properties'][conf][f'orca {metastable} conformer key value'],
+                          'selected as metastable')                    
+                case 'C1=CCNC=C1':
+                    if d['orca conformers properties'][conf]['orca reac1 conformer key value'] < d['orca conformers properties'][conf]['orca reac2 conformer key value']:
+                        metastable = 'reac1'
+                    else:
+                        metastable = 'reac2'
+                    if args.verbose: print('Structure with shorter C-C distance', 
+                          d['orca conformers properties'][conf][f'orca {metastable} conformer key value'],
+                          'selected as metastable')                    
+            metastable_energy = d['orca conformers properties'][conf][f'orca {metastable} def2-tzvp full energy'] + d['orca conformers properties'][conf][f'orca {metastable} E corr']
+            TS_energy =  d['orca conformers properties'][conf]['orca TS def2-tzvp full energy'] + d['orca conformers properties'][conf]['orca TS E corr']
+            metastable_Es.append(metastable_energy)
+            TS_Es.append(TS_energy)
+        failed_orca_list_total.extend(failed_orca_list)
+        conformers_to_orca_total += d['orca input conformers number']
+        conformers_f***REMOVED***_orca_total += len(TS_Es)
+        failed_orca_count_total += failed_orca_count
+        energies_dict[f"{mol}"] = {}
+        energies_dict[f"{mol}"]['Metastable energies'] = metastable_Es
+        energies_dict[f"{mol}"]['TS energies'] = TS_Es
+    print(f'Conformers generated by ORCA stage: {conformers_to_orca_total}')
+    print(f'Successful ORCA conformers: {conformers_f***REMOVED***_orca_total}')
+    print(f'Probably you should manually check failed ORCA jobs (total {failed_orca_count_total}):')
+    print(*[f'{failed_conf}\n' for failed_conf in failed_orca_list_total], end='', sep='')
+    if args.verbose: pprint.pprint(energies_dict)
+    print(f'Total number of molecules in energies dictionary: {len(energies_dict.keys())}')
+    if args.individual == False:
+        print(f'Energies are dumped in {args.dump}_energies.json')
+        with open(f'{args.dump}_energies.json', 'w') as json_file:
+            json.dump(energies_dict, json_file, indent=4)
+    else:
+        for key, value in energies_dict.items():
+            individual_dict = {}
+            individual_dict[key] = value
+            with open(f'{key}_energies.json', 'w') as json_file:
+                json.dump(individual_dict, json_file, indent=4)
+        print(f'Energies for {key} are dumped in {key}_energies.json')
+
+
+
+
+
+    
 if __name__== '__main__':
     main()

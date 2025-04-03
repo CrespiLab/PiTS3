@@ -5,3 +5,4 @@ xtbpipe
 results
 **/__pycache__
 *egg-info*
+ts_pipeline/config.py
