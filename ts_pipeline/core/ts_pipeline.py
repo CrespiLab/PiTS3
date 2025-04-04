@@ -656,7 +656,7 @@ def confirm_orca_template_exists(orca_template_file):
             if os.path.isfile(f'{template_dir}/{os.path.basename(orca_template_file)}'):
                 confirmation = input(f'Found {os.path.basename(orca_template_file)} in {template_dir}, confirm? [yes] ')
                 if 'y' in confirmation or not confirmation:
-                    break
+                    return os.path.abspath(f'{template_dir}/{os.path.basename(orca_template_file)}')
                 elif 'n' in confirmation:
                     sys.exit('Aborting')
 def Williams_proc1(mol, e_dict, verbose = False):

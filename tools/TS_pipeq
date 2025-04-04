@@ -114,7 +114,7 @@ export scratch=\$SNIC_TMP
 export MKL_NUM_THREADS=` echo $number_of_cores `
 export OMP_NUM_THREADS=` echo $number_of_cores `,1
 
-TS_pipe `echo $file` -m '`echo $mode`' -o '`echo $orca_template`' > \$SLURM_SUBMIT_DIR/`echo $basename`.out 2>&1
+tspipe `echo $file` -m '`echo $mode`' -o '`echo $orca_template`' > \$SLURM_SUBMIT_DIR/`echo $basename`.out 2>&1
 EOF
 
     if [[ $dry_run -eq 0 ]]; then
