@@ -8,10 +8,10 @@ import shutil, sys, warnings, pprint
 
 # Tools to check (name: default fallback)
 _REQUIRED_TOOLS = {
-    "xtb"  : "",
-    "orca" : "",
-    "pysis": "",
-    "crest": ""
+    "xtb"  : "xtb",
+    "orca" : "orca.run",
+    "pysis": "pysis",
+    "crest": "crest"
 }
 
 # Build resolved paths or fallback

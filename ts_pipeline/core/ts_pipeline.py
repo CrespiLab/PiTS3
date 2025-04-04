@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, re, shutil, sys, glob
+import os, re, shutil, sys, glob, math
 f***REMOVED*** openbabel import pybel
 f***REMOVED*** rdkit import Chem
 f***REMOVED*** rdkit.Chem import rdmolfiles, rdDetermineBonds, rdMolTransforms
@@ -659,7 +659,31 @@ def confirm_orca_template_exists(orca_template_file):
                     break
                 elif 'n' in confirmation:
                     sys.exit('Aborting')
-            
+def Williams_proc1(mol, e_dict, verbose = False):
+#    R = 8.31446261815324
+    R = 8.314
+    T = 298.15
+    hartree = 2625.4996394799 # [kJ/mol]
+    min_energy = min(min(e_dict["Metastable energies"]), min(e_dict["TS energies"]))
+    M_Es = [(M_E - min_energy) * hartree for M_E in e_dict['Metastable energies']]
+    TS_Es = [(TS_E - min_energy) * hartree for TS_E in e_dict['TS energies']]
+    M_BWs = [math.exp(-1000*E/ (R*T)) for E in M_Es]
+    TS_BWs = [math.exp(-1000*E/ (R*T)) for E in TS_Es]
+    TS_BWs_sum = sum(TS_BWs)
+    khi_zero = max(M_BWs) / sum(M_BWs)
+    BWeff = khi_zero * TS_BWs_sum
+    Geff = (-R * T * math.log(BWeff)) / 1000
+    if verbose:
+        print(f'\nWilliams (10.1002/poc.4312) procedure 1 for {mol}\n'+f'-------------------|'*3)
+        print(f'Energies [hartree] | Energies [kJ/mol] | Boltzmann weights |')
+        print(f'   Mi        TSi   |'*3)
+        print(*[f'{M_Eh: <10.4f}{TS_Eh: <9.4f}|{M_E: ^10.1f}{TS_E: ^9.1f}|{M_BW: <9.3e}|{TS_BW: <9.3e}|' 
+              for M_Eh, TS_Eh, M_E, TS_E, M_BW, TS_BW 
+              in zip(e_dict['Metastable energies'], e_dict["TS energies"], M_Es, TS_Es, M_BWs, TS_BWs)], sep='\n')
+        print(f'-------------------|'*3)
+        print(f'TS BWs sum: {TS_BWs_sum:.3e}, χ0 = {khi_zero:.3e}, "BWeff" = {TS_BWs_sum * khi_zero}')
+        print(f'Geff({mol}) = {Geff:.3f} kJ/mol')
+    return Geff
 #######################################################################
 #######################################################################
 #######################################################################

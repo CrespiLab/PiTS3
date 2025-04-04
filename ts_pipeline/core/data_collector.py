@@ -45,6 +45,7 @@ def main():
         mols = directories
     else:
         mols = args.dirname
+        args.individual = True
     if '.json' in args.dump:
         args.dump = os.path.splitext(path)[0]
     mols = list(map(remove_trailing_slash, mols))
@@ -317,9 +318,17 @@ def main():
                 json.dump(individual_dict, json_file, indent=4)
         print(f'Energies for {key} are dumped in {key}_energies.json')
     ######## 5 Williams 
-
-
-
+    Gs = {}
+    for mol_name, e_dict in energies_dict.items():
+        try:
+            Gs[mol_name] = tsp.Williams_proc1(mol_name, e_dict, verbose = args.verbose)
+        except ValueError as e:
+            print(e) 
+    if args.verbose: print(*[f'{name: <15} {Geff: <10.2f}' for name, Geff in Gs.items()], sep='\n')
+    print(f"Final Williams-treated Geff's are dumped in {args.dump}_Geffs.json")
+    with open(f'{args.dump}_Geffs.json', 'w') as json_file:
+        json.dump(Gs, json_file, indent=4)
+    
 
     
 if __name__== '__main__':
