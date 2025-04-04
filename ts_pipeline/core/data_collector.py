@@ -253,12 +253,20 @@ def main():
                 continue
             match args.mode:
                 # Selecting isomer with smaller dihedral as metastable
-                case 'C-C=C-C' | 'C-C=N-C':
+                case 'C-C=C-C':
+                    if abs(d['orca conformers properties'][conf]['orca reac1 conformer key value']) < abs(d['orca conformers properties'][conf]['orca reac2 conformer key value']):
+                        metastable = 'reac1'
+                    else:
+                        metastable = 'reac2'
+                    if args.verbose: print('For conf {conf}, structure with C-C=C-C angle', 
+                          d['orca conformers properties'][conf][f'orca {metastable} conformer key value'],
+                          'selected as metastable')
+                case 'C-C=N-C' | 'Greenfield C-C=N-C':
                     if abs(d['orca conformers properties'][conf]['orca reac1 conformer dih value']) < abs(d['orca conformers properties'][conf]['orca reac2 conformer dih value']):
                         metastable = 'reac1'
                     else:
                         metastable = 'reac2'
-                    if args.verbose: print('For conf {conf} Structure with C=N-C angle', 
+                    if args.verbose: print('For conf {conf}, structure with C=N-C angle', 
                           d['orca conformers properties'][conf][f'orca {metastable} conformer key value'],
                           'and C-C=N-C dihedral',
                           d['orca conformers properties'][conf][f'orca {metastable} conformer dih value'],
@@ -308,7 +316,7 @@ def main():
             with open(f'{key}_energies.json', 'w') as json_file:
                 json.dump(individual_dict, json_file, indent=4)
         print(f'Energies for {key} are dumped in {key}_energies.json')
-
+    ######## 5 Williams 
 
 
 
