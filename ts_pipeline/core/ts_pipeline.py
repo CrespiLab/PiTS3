@@ -393,6 +393,7 @@ def crest_constrained_sampling(input_file,
                                model='--gfn2', 
                                solvent='', 
                                constrain_atoms=[],
+                               constrain_dihedral=[],
                                optlev='', 
                                dlen='',
                                mdlen='',
@@ -403,10 +404,12 @@ def crest_constrained_sampling(input_file,
     input_file, initial_path = safe_dir(input_file, dirname)    
     os.chdir(dirname)
     constrain_atoms = list(map(lambda x: x+1, constrain_atoms))
-    constrain_line = ','.join(map(str,constrain_atoms))
+    constrain_atoms_line = ','.join(map(str,constrain_atoms))
+    constrain_dihedral_line = ','.join(map(str,constrain_dihedral)) + ',auto'
     constraint_input=f'''$constrain
  force constant=0.50
- atoms: {constrain_line}
+ atoms: {constrain_atoms_line}
+ dihedral: {constrain_dihedral_line}
 $end'''
     with open('constraints.inp','w') as file:
         file.write(constraint_input)

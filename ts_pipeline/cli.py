@@ -49,6 +49,7 @@ C1=CCNC=C1    - for diarylethenes
             print('No ORCA template sugge***REMOVED***d, thus going until pysis reoptimization (stage 8)')
     for mol in mols:
     ####### 0 Detecting key TS node
+        dihedral_nums=''
         match args.mode:
             case 'C-C=C-C' | 'C-C=N-C':
                 dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
@@ -213,6 +214,7 @@ C1=CCNC=C1    - for diarylethenes
         TS_conformers = tsp.crest_constrained_sampling(TS,
                                                        dirname=for_TS_sampling, 
                                                        constrain_atoms=constraint,
+                                                       constrain_dihedral=dihedral_nums,
                                                        optlev='--extreme',)
         ######################################################  dlen='--len x3', mdlen='--mdlen x3')
                                                       # solvent='--alpb acetonitrile',
