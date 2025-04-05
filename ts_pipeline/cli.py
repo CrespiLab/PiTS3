@@ -64,12 +64,12 @@ C1=CCNC=C1    - for diarylethenes
                     dihedral_line_xtb += ',180.0'
                     scan_line = '180.0, 0.0, 18'
                 angle_CNC_nums = dihedral_nums[1:]
-                constraint = tsp.find_fragment_atoms_with_hydrogens(mol, args.mode, sanitize=False)
+                constraint = tsp.find_fragment_atoms_with_neighbors(mol, args.mode, sanitize=False)
             case 'C1C=CCC=C1':
                 cyclohexadiene_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
                 distance1, distance2 = cyclohexadiene_nums[1::4], cyclohexadiene_nums[2::2]
                 print(f'Reference smiles {args.mode} found, atom numbers: {cyclohexadiene_nums}, concerted scan will be done between atom pairs {distance1} and {distance2}')
-                constraint = tsp.find_fragment_atoms_with_hydrogens(mol, args.mode, sanitize=False)
+                constraint = tsp.find_fragment_atoms_with_neighbors(mol, args.mode, sanitize=False)
             case 'N=CC=CC=C':
                 count = 0
                 smiles_list = ['N:CC=CC=CC', 'N:CC=CC:CC', 'N:CCCC:CC', 'N=CCCC:CC','N=CC=CC:CC','N:CCCC=CC','N:CC=CC:CC','N=CC=CC=CC',]
@@ -87,7 +87,7 @@ C1=CCNC=C1    - for diarylethenes
                 distance1 = [adae_chain_nums[0], adae_chain_nums[-2]]
                 starting_distance = tsp.get_distance(mol, adae_chain_nums[0], adae_chain_nums[-2])
                 print(f'Reference smiles {args.mode} found, atom numbers: {adae_chain_nums}, concerted scan will be done between atom pair {distance1}')
-                constraint = tsp.find_fragment_atoms_with_hydrogens(mol, smiles_list[count-1], sanitize=False)
+                constraint = tsp.find_fragment_atoms_with_neighbors(mol, smiles_list[count-1], sanitize=False)
             case 'C1=CCNC=C1':
                 count = 0
                 smiles_list = ['C1=CCNC=C1', 'C1CCNC=C1']
@@ -105,7 +105,7 @@ C1=CCNC=C1    - for diarylethenes
                 distance1 = adae_chain_nums[2:4]
                 print(f'Reference smiles {args.mode} found, atom numbers: {adae_chain_nums}, concerted scan will be done between atom pair {distance1}')
                 starting_distance = tsp.get_distance(mol, *distance1)
-                constraint = tsp.find_fragment_atoms_with_hydrogens(mol, smiles_list[count-1], sanitize=False)
+                constraint = tsp.find_fragment_atoms_with_neighbors(mol, smiles_list[count-1], sanitize=False)
             case _:
                 try:
                     fragment_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))

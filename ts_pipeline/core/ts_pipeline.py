@@ -364,6 +364,27 @@ def find_fragment_atoms_with_hydrogens(xyzfile, reference_smiles, chrg=0, saniti
         hydrogen_indices.extend(hydrogen_idxs)
     all_atoms = hydrogen_indices + list(matches[0])
     return all_atoms    
+def find_fragment_atoms_with_neighbors(xyzfile, reference_smiles, chrg=0, sanitize=False):
+    """
+    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Uses openbabel to generate mol object with correct bond orders.
+
+    """
+    mol = next(pybel.readfile('xyz', xyzfile))
+    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), removeHs = False, sanitize=sanitize)
+    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    matches = mol.GetSubstructMatches(reference_fragment)
+    if not matches:
+        raise ValueError("Reference fragment not found in the molecule!")
+    if len(matches) > 1:
+        raise ValueError("Selected reference fragment (--dihedral) is not unique in the molecule!")
+    key_atoms = [mol.GetAtomWithIdx(atom_index) for atom_index in matches[0][1:3]]
+    neighbors_indices = []
+    for atom in key_atoms:
+        neighbors_idxs = [neighbor.GetIdx() for neighbor in atom.GetNeighbors() if neighbor.GetIdx() not in matches[0]]
+        neighbors_indices.extend(neighbors_idxs)
+    all_atoms = neighbors_indices + list(matches[0])
+    return all_atoms    
     
 def find_fragment_atoms_ibo(xyzfile, reference_smiles, chrg=0):
     """
