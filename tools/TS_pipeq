@@ -23,6 +23,7 @@ usage () {
     echo "  -n    number of cores/threads (1..32)"
     echo "  -m    TS mode (SMILES string with reference fragment)"
     echo "  -o    path to orca template file for the last ***REMOVED***p of pipeline"
+    echo "  -f    force constant for CREST constrained sampling (default = 0.50)"
     echo "  -k    keep .SLURM script"
     echo "  -d    dry run (keep .SLURM, but no submission)"
     echo
@@ -31,7 +32,7 @@ usage () {
     echo
 }
 
-while getopts ":t:a:n:m:o:hkd" optchar; do
+while getopts ":t:a:n:m:o:f:hkd" optchar; do
   case $optchar in
     t)
       time_hours=$OPTARG
@@ -75,6 +76,9 @@ while getopts ":t:a:n:m:o:hkd" optchar; do
     o)
       orca_template=$OPTARG
       ;;
+    f)
+      force_constant=$OPTARG
+      ;;
     h)
       usage
       exit 1
@@ -114,7 +118,7 @@ export scratch=\$SNIC_TMP
 export MKL_NUM_THREADS=` echo $number_of_cores `
 export OMP_NUM_THREADS=` echo $number_of_cores `,1
 
-tspipe `echo $file` -m '`echo $mode`' -o '`echo $orca_template`' > \$SLURM_SUBMIT_DIR/`echo $basename`.out 2>&1
+tspipe `echo $file` -m '`echo $mode`' -o '`echo $orca_template`' -f `echo $force_constant` > \$SLURM_SUBMIT_DIR/`echo $basename`.out 2>&1
 EOF
 
     if [[ $dry_run -eq 0 ]]; then

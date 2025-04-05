@@ -26,6 +26,7 @@ def main():
                         C1C=CCC=C1    - norbornadienes
                         C1=CCNC=C1    - diarylethenes''', required=True)
     parser.add_argument('-o', '--orca_template', help='ORCA template for ***REMOVED***p 9. If empty, stops at stage 8 (pysis IRC for all TS conformers)')
+    parser.add_argument('-f', '--force_constant', help='Force constant for CREST constrained sampling (default = 0.50)')
     args = parser.parse_args()
     
     if not args.mode:
@@ -215,6 +216,7 @@ C1=CCNC=C1    - for diarylethenes
                                                        dirname=for_TS_sampling, 
                                                        constrain_atoms=constraint,
                                                        constrain_dihedral=dihedral_nums,
+                                                       force_constant = args.force_constant,
                                                        optlev='--extreme',)
         ######################################################  dlen='--len x3', mdlen='--mdlen x3')
                                                       # solvent='--alpb acetonitrile',

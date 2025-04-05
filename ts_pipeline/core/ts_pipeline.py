@@ -394,6 +394,7 @@ def crest_constrained_sampling(input_file,
                                solvent='', 
                                constrain_atoms=[],
                                constrain_dihedral=[],
+                               force_constant = 0.50,
                                optlev='', 
                                dlen='',
                                mdlen='',
@@ -407,7 +408,7 @@ def crest_constrained_sampling(input_file,
     constrain_atoms_line = ','.join(map(str,constrain_atoms))
     constrain_dihedral_line = ','.join(map(str,constrain_dihedral)) + ',auto'
     constraint_input=f'''$constrain
- force constant=0.50
+ force constant={force_constant}
  atoms: {constrain_atoms_line}
  dihedral: {constrain_dihedral_line}
 $end'''
