@@ -645,20 +645,26 @@ def orca_user_confirmation():
         else:
             print("Invalid input. Please enter 'yes' or 'no'.")
     if user_input in ("no", "n"):
-        sys.exit('Stopping now because no ORCA template provided, and users reque***REMOVED***d stop')
-def confirm_orca_template_exists(orca_template_file):
+        sys.exit('Stopping now because no ORCA template provided, and user reque***REMOVED***d stop')
+def confirm_orca_template_exists(orca_template_file, ask_yes = True):
     while True:
         if os.path.isfile(orca_template_file):
             break
         else:
             print(f'ORCA template {orca_template_file} not found, trying to find similar template in ts_pipeline/templates...')
             template_dir = os.path.abspath(f'{ts_pipe_dir}/../templates')
-            if os.path.isfile(f'{template_dir}/{os.path.basename(orca_template_file)}'):
+            if os.path.isfile(f'{template_dir}/{os.path.basename(orca_template_file)}') and ask_yes:
                 confirmation = input(f'Found {os.path.basename(orca_template_file)} in {template_dir}, confirm? [yes] ')
                 if 'y' in confirmation or not confirmation:
                     return os.path.abspath(f'{template_dir}/{os.path.basename(orca_template_file)}')
                 elif 'n' in confirmation:
-                    sys.exit('Aborting')
+                    sys.exit('Aborted by user (ORCA template not found)')
+            elif os.path.isfile(f'{template_dir}/{os.path.basename(orca_template_file)}') and not ask_yes:
+                print(f'{orca_template_file} not found, {os.path.basename(orca_template_file)} found in***REMOVED***ad in {template_dir}. Taking the last one as template.')
+                return os.path.abspath(f'{template_dir}/{os.path.basename(orca_template_file)}')
+            elif not os.path.isfile(f'{template_dir}/{os.path.basename(orca_template_file)}'):
+                sys.exit(f'ORCA template sugge***REMOVED***d by user, but no template file found in current directory nor among templates. Aborting.')
+                    
 def Williams_proc1(mol, e_dict, verbose = False):
 #    R = 8.31446261815324
     R = 8.314

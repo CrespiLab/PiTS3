@@ -3,6 +3,7 @@
 import os, shutil, argparse, sys
 import ts_pipeline.core.ts_pipeline as tsp
 f***REMOVED*** ts_pipeline.config import TOOLS as tsp_tools
+sys.stdout.reconfigure(line_buffering=True)
 
 ### Installation section
 pysis_path  = tsp_tools["pysis"]
@@ -36,11 +37,16 @@ C1=CCNC=C1    - for diarylethenes
 ''')
     mols = args.filename
     mols = list(map(os.path.abspath, mols))
-    if not args.orca_template:
-        tsp.orca_user_confirmation()
+    if args.orca_template:
+        if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive':
+            args.orca_template = args.orca_template = tsp.confirm_orca_template_exists(args.orca_template, ask_yes = True)
+        else:
+            args.orca_template = args.orca_template = tsp.confirm_orca_template_exists(args.orca_template, ask_yes = False)
     else:
-        tsp.confirm_orca_template_exists(args.orca_template)
-        
+        if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive':
+            tsp.orca_user_confirmation()
+        else:
+            print('No ORCA template sugge***REMOVED***d, thus going until pysis reoptimization (stage 8)')
     for mol in mols:
     ####### 0 Detecting key TS node
         match args.mode:
