@@ -27,6 +27,7 @@ def main():
                         C1=CCNC=C1    - diarylethenes''', required=True)
     parser.add_argument('-o', '--orca_template', help='ORCA template for ***REMOVED***p 9. If empty, stops at stage 8 (pysis IRC for all TS conformers)')
     parser.add_argument('-f', '--force_constant', help='Force constant for CREST constrained sampling (default = 0.50)')
+    parser.add_argument('--postpone_orca', action = 'store_true', help='Prepares templates and geometries for ORCA calculation, but does not run it')
     args = parser.parse_args()
     
     if not args.mode:
@@ -243,7 +244,8 @@ C1=CCNC=C1    - for diarylethenes
             for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
             tsp.orca_three_points(ircs,
                                   orca_template = args.orca_template,
-                                  dirname = for_orca,)
+                                  dirname = for_orca,
+                                  postpone_orca = args.postpone_orca)
         else:
             print(f'Since no ORCA template provided, stopping with the current molecule now.')
 

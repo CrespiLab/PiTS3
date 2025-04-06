@@ -189,8 +189,7 @@ def pysis_gs(input_yaml, xyz_1, xyz_2, dirname='.'):
     '''
     if not input_yaml: print("Please provide input .yaml specification for pysis")
     if not (xyz_1 and xyz_2): 
-        print("You need exactly two geometries to continue, exiting")
-        sys.exit()
+        sys.exit("You need exactly two geometries to continue, exiting")
     input_yaml, initial_path = safe_dir(input_yaml, dirname)    
     xyz_1 = safe_dir(xyz_1, dirname, rename='geom_1.xyz')[0]
     xyz_2 = safe_dir(xyz_2, dirname, rename='geom_2.xyz')[0]
@@ -534,6 +533,7 @@ def cregen(ensemble_file, extra_params='', dirname = '.', sorted_ensemble=False)
     os.chdir(init_path)
     return resulting_ensemble
 def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname = '.',
+                      postpone_orca = False,
                       control_ang=[], control_ang_range=[],
                       control_dih=[], control_dih_range=[]):
     '''
@@ -582,9 +582,12 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
         replace_in_file(curr_orca_template, '%irc_B.xyz%', 'backward_end_opt.xyz')
         replace_in_file(curr_orca_template, 'orca_Compound_1.hess', f'{basename}_Compound_1.hess')
         orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
-        os.sy***REMOVED***m(f'orca.run {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
-        for f in glob.glob('cregened*tmp*'):
-            os.remove(f)
+        if not postpone_orca:
+            os.sy***REMOVED***m(f'orca.run {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
+            for f in glob.glob('cregened*tmp*'):
+                os.remove(f)
+        else:
+            sys.exit(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
         os.chdir(init_path)
     os.chdir(init_path_top)
 def get_dihedral(xyzfile, atom1, atom2, atom3, atom4):

@@ -23,6 +23,7 @@ usage () {
     echo "  -n    number of cores/threads (1..32)"
     echo "  -m    TS mode (SMILES string with reference fragment)"
     echo "  -o    path to orca template file for the last ***REMOVED***p of pipeline"
+    echo "  --postpone_orca    path to orca template file for the last ***REMOVED***p of pipeline"
     echo "  -f    force constant for CREST constrained sampling (default = 0.50)"
     echo "  -k    keep .SLURM script"
     echo "  -d    dry run (keep .SLURM, but no submission)"
@@ -32,70 +33,95 @@ usage () {
     echo
 }
 
-while getopts ":t:a:n:m:o:f:hkd" optchar; do
-  case $optchar in
-    t)
-      time_hours=$OPTARG
+PARSED=$(getopt -o t:a:n:m:o:f:hkd --long postpone_orca -- "$@")
+if [[ $? -ne 0 ]]; then
+  echo "Failed to parse options." >&2
+  exit 1
+fi
+
+# Reset the positional parameters to the parsed options
+eval set -- "$PARSED"
+
+# Process each option
+while true; do
+  case "$1" in
+    -t)
+      time_hours="$2"
+      shift 2
       ;;
-    a)
-      if [[ "$OPTARG" == "***REMOVED***" ]]; then
+    -a)
+      case "$2" in
+        ***REMOVED***)
           account_name="***REMOVED***"
-      elif [[ "$OPTARG" == "***REMOVED***" ]]; then
+          ;;
+        ***REMOVED***)
           account_name="***REMOVED***"
-      elif [[ "$OPTARG" == "***REMOVED***" ]]; then
+          ;;
+        ***REMOVED***)
           account_name="***REMOVED***"
-      else
+          ;;
+        *)
           echo "Unknown account"
           exit 1
-      fi
+          ;;
+      esac
+      shift 2
       ;;
-    n)
-      number_of_cores="$OPTARG"
-      if [[ number_of_cores -gt 32 ]]; then
+    -n)
+      number_of_cores="$2"
+      if [[ $number_of_cores -gt 32 ]]; then
           echo "Please, set number of cores less or equal 32"
           exit 1
-      elif [[ number_cores -eq 32 ]]; then
+      elif [[ $number_of_cores -eq 32 ]]; then
           memory=94
-      elif [[ number_of_cores -le 0 ]]; then
+      elif [[ $number_of_cores -le 0 ]]; then
           echo "Number of cores is 0 or less!"
           exit 1
-      elif [[ number_of_cores -lt 32 ]]; then
-          let memory=3*$OPTARG
+      elif [[ $number_of_cores -lt 32 ]]; then
+          let memory=3*$number_of_cores
       fi
+      shift 2
       ;;
-    k)
+    -k)
       keep_slurm=1
+      shift
       ;;
-    d)
+    --postpone_orca)
+      postpone_orca="--postpone_orca"
+      shift
+      ;;
+    -d)
       dry_run=1
       keep_slurm=1
+      shift
       ;;
-    m)
-      mode=$OPTARG
+    -m)
+      mode="$2"
+      shift 2
       ;;
-    o)
-      orca_template=$OPTARG
+    -o)
+      orca_template="$2"
+      shift 2
       ;;
-    f)
-      force_constant=$OPTARG
+    -f)
+      force_constant="$2"
+      shift 2
       ;;
-    h)
+    -h)
       usage
       exit 1
       ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
+    --)
+      shift
+      break
       ;;
-    :)
-      echo "Option -$OPTARG requires an argument." >&2
+    *)
+      echo "Invalid option: $1" >&2
       exit 1
       ;;
   esac
 done
 
-# Shift argument pointer to next parameter
-shift $((OPTIND -1))
 
 for file in $@; 
     do
@@ -118,7 +144,7 @@ export scratch=\$SNIC_TMP
 export MKL_NUM_THREADS=` echo $number_of_cores `
 export OMP_NUM_THREADS=` echo $number_of_cores `,1
 
-tspipe `echo $file` -m '`echo $mode`' -o '`echo $orca_template`' -f `echo $force_constant` > \$SLURM_SUBMIT_DIR/`echo $basename`.out 2>&1
+tspipe `echo $file` -m '`echo $mode`' -o '`echo $orca_template`' -f `echo $force_constant` `echo $postpone_orca` > \$SLURM_SUBMIT_DIR/`echo $basename`.out 2>&1
 EOF
 
     if [[ $dry_run -eq 0 ]]; then
