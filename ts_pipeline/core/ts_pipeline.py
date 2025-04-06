@@ -439,6 +439,23 @@ $end'''
     TS_conformers_path = f'{dirname}/crest_conformers.xyz'
     os.chdir(initial_path)
     return TS_conformers_path
+def crest_simple_sampling(input_file,
+                               dirname='.',
+                               model='--gfn2', 
+                               solvent='', 
+                               optlev='', 
+                               dlen='',
+                               mdlen='',):
+    '''
+    Runs CREST conformational sampling with constrain (predefined in the function).
+    '''
+    input_file, initial_path = safe_dir(input_file, dirname)    
+    os.chdir(dirname)
+    crest_line=f'{crest_path} {input_file} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
+    os.sy***REMOVED***m(crest_line)
+    conformers_path = f'{dirname}/crest_conformers.xyz'
+    os.chdir(initial_path)
+    return conformers_path
 def crest_constrained_sampling_old(input_file,
                                   dirname='.',
                                   model='--gfn2', 
@@ -590,6 +607,79 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
             sys.exit(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
         os.chdir(init_path)
     os.chdir(init_path_top)
+def orca_multixyz(multixyzfile, 
+                  orca_template = 'orca_single_point.inp', 
+                  dirname = '.',
+                  postpone_orca = False,):
+    '''
+    Runs ORCA compound job to reoptimize TS and IRC endpoints. DOES NOT DO DFT IRC!
+
+    Parameters
+    ----------
+    irc_dict : str
+        Dictionary f***REMOVED*** pysis_ts_irc, containing paths to TS and both endpoins for each TS conformer.
+    orca_template : str
+        ORCA compound job template. Do not change if you do not know how to set compound job!
+    dirname : TYPE, optional
+        Directory in which to run the job. The default is '.'.
+
+    Returns
+    -------
+    Path to orca output.
+
+    '''
+    init_path_top = os.getcwd()
+    multixyzfile = os.path.abspath(multixyzfile)
+    orca_template = os.path.abspath(orca_template)
+    os.chdir(dirname)
+    multixyz = shutil.copy(multixyzfile, '.')
+    multixyz = split_geoms(multixyz)
+    for file in multixyz[0]:
+        name = re.split(r'\.', file)[0]
+        conf_dir = name + '_orca_SP'
+        os.mkdir(conf_dir)
+        curr_file = shutil.move(file, conf_dir)
+        curr_orca_template = shutil.copy(orca_template, conf_dir)
+        replace_in_file(curr_orca_template, '%geom.xyz%', f'{os.path.basename(curr_file)}')
+        
+        
+#    orca_template = shutil.copy(orca_template, f'.inp')
+#    for conformer, xyzs in irc_dict['conformers'].items():
+#        if control_ang:
+#            control_ang_value = get_angle(xyzs['TS'], *control_ang)
+#            control_ang_range.sort()
+#            if control_ang_range[0] < control_ang_value < control_ang_range[1]:
+#                print(f'Angle {control_ang} is in undesired range {control_ang_range}, skipping {conformer}')
+#                continue
+#        if control_dih:
+#            control_dih_value = get_dihedral(xyzs['TS'], *control_dih)
+#            control_dih_range.sort()
+#            if control_dih_range[0] < control_dih_value < control_dih_range[1]:
+#                print(f'Angle {control_dih} is in undesired range {control_dih_range}, skipping {conformer}')
+#                continue
+#        curr_conf_dir = re.split(r'\.', conformer)[0]
+#        init_path = os.getcwd()
+#        os.mkdir(curr_conf_dir)
+#        os.chdir(curr_conf_dir)
+#        for value in xyzs.values():
+#            shutil.copy(value, '.')
+#        curr_orca_template = shutil.copy(f'../{orca_template}', '.')
+#        replace_in_file(curr_orca_template, '%ts_geom.xyz%', 'ts_final_geometry.xyz')
+#        replace_in_file(curr_orca_template, '%irc_F.xyz%', 'forward_end_opt.xyz')
+#        replace_in_file(curr_orca_template, '%irc_B.xyz%', 'backward_end_opt.xyz')
+#        replace_in_file(curr_orca_template, 'orca_Compound_1.hess', f'{basename}_Compound_1.hess')
+#        orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
+        if not postpone_orca:
+            os.sy***REMOVED***m(f'orca.run {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
+            for f in glob.glob('cregened*tmp*'):
+                os.remove(f)
+        else:
+            print('Here comes sys.exit, but we\'re debugging')
+#            sys.exit(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
+#        os.chdir(init_path)
+    os.chdir(init_path_top)
+
+
 def get_dihedral(xyzfile, atom1, atom2, atom3, atom4):
     '''
     Measures dihedral angle in an .xyz molecule.
