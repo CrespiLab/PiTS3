@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, re, shutil, sys, glob, math
+import os, re, shutil, sys, glob, math, subprocess
 f***REMOVED*** openbabel import pybel
 f***REMOVED*** rdkit import Chem
 f***REMOVED*** rdkit.Chem import rdmolfiles, rdDetermineBonds, rdMolTransforms
@@ -600,11 +600,11 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
         replace_in_file(curr_orca_template, 'orca_Compound_1.hess', f'{basename}_Compound_1.hess')
         orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
         if not postpone_orca:
-            os.sy***REMOVED***m(f'orca.run {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
+            os.sy***REMOVED***m(f'{orca_path} {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
             for f in glob.glob('cregened*tmp*'):
                 os.remove(f)
         else:
-            sys.exit(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
+            print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
         os.chdir(init_path)
     os.chdir(init_path_top)
 def orca_multixyz(multixyzfile, 
@@ -641,42 +641,14 @@ def orca_multixyz(multixyzfile,
         curr_file = shutil.move(file, conf_dir)
         curr_orca_template = shutil.copy(orca_template, conf_dir)
         replace_in_file(curr_orca_template, '%geom.xyz%', f'{os.path.basename(curr_file)}')
-        
-        
-#    orca_template = shutil.copy(orca_template, f'.inp')
-#    for conformer, xyzs in irc_dict['conformers'].items():
-#        if control_ang:
-#            control_ang_value = get_angle(xyzs['TS'], *control_ang)
-#            control_ang_range.sort()
-#            if control_ang_range[0] < control_ang_value < control_ang_range[1]:
-#                print(f'Angle {control_ang} is in undesired range {control_ang_range}, skipping {conformer}')
-#                continue
-#        if control_dih:
-#            control_dih_value = get_dihedral(xyzs['TS'], *control_dih)
-#            control_dih_range.sort()
-#            if control_dih_range[0] < control_dih_value < control_dih_range[1]:
-#                print(f'Angle {control_dih} is in undesired range {control_dih_range}, skipping {conformer}')
-#                continue
-#        curr_conf_dir = re.split(r'\.', conformer)[0]
-#        init_path = os.getcwd()
-#        os.mkdir(curr_conf_dir)
-#        os.chdir(curr_conf_dir)
-#        for value in xyzs.values():
-#            shutil.copy(value, '.')
-#        curr_orca_template = shutil.copy(f'../{orca_template}', '.')
-#        replace_in_file(curr_orca_template, '%ts_geom.xyz%', 'ts_final_geometry.xyz')
-#        replace_in_file(curr_orca_template, '%irc_F.xyz%', 'forward_end_opt.xyz')
-#        replace_in_file(curr_orca_template, '%irc_B.xyz%', 'backward_end_opt.xyz')
-#        replace_in_file(curr_orca_template, 'orca_Compound_1.hess', f'{basename}_Compound_1.hess')
-#        orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
+        orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
         if not postpone_orca:
-            os.sy***REMOVED***m(f'orca.run {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
+            subprocess.run(f'{orca_path} {os.path.basename(curr_orca_template)} > {orca_basename}.out 2> {orca_basename}.err', cwd = f'{conf_dir}',
+                           shell=True, capture_output = True, text = True)
             for f in glob.glob('cregened*tmp*'):
                 os.remove(f)
         else:
-            print('Here comes sys.exit, but we\'re debugging')
-#            sys.exit(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
-#        os.chdir(init_path)
+            print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
     os.chdir(init_path_top)
 
 
