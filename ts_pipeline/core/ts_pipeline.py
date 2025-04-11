@@ -425,11 +425,17 @@ def crest_constrained_sampling(input_file,
     os.chdir(dirname)
     constrain_atoms = list(map(lambda x: x+1, constrain_atoms))
     constrain_atoms_line = ','.join(map(str,constrain_atoms))
-    constrain_dihedral_line = ','.join(map(str,constrain_dihedral)) + ',auto'
-    constraint_input=f'''$constrain
- force constant={force_constant}
+    if constrain_dihedral:
+        constrain_dihedral_line = ','.join(map(str,constrain_dihedral)) + ',auto'
+        constraint_input=f'''$constrain
+force constant={force_constant}
  atoms: {constrain_atoms_line}
  dihedral: {constrain_dihedral_line}
+$end'''
+    else:
+        constraint_input=f'''$constrain
+ force constant={force_constant}
+ atoms: {constrain_atoms_line}
 $end'''
     with open('constraints.inp','w') as file:
         file.write(constraint_input)
@@ -565,6 +571,49 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
             print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
         os.chdir(init_path)
     os.chdir(init_path_top)
+def orca_multixyz(multixyzfile, 
+                  orca_template = 'orca_single_point.inp', 
+                  dirname = '.',
+                  postpone_orca = False,):
+    '''
+    Runs ORCA compound job to reoptimize TS and IRC endpoints. DOES NOT DO DFT IRC!
+
+    Parameters
+    ----------
+    irc_dict : str
+        Dictionary f***REMOVED*** pysis_ts_irc, containing paths to TS and both endpoins for each TS conformer.
+    orca_template : str
+        ORCA compound job template. Do not change if you do not know how to set compound job!
+    dirname : TYPE, optional
+        Directory in which to run the job. The default is '.'.
+
+    Returns
+    -------
+    Path to orca output.
+
+    '''
+    init_path_top = os.getcwd()
+    multixyzfile = os.path.abspath(multixyzfile)
+    orca_template = os.path.abspath(orca_template)
+    os.chdir(dirname)
+    multixyz = shutil.copy(multixyzfile, '.')
+    multixyz = split_geoms(multixyz)
+    for file in multixyz[0]:
+        name = re.split(r'\.', file)[0]
+        conf_dir = name + '_orca_SP'
+        os.mkdir(conf_dir)
+        curr_file = shutil.move(file, conf_dir)
+        curr_orca_template = shutil.copy(orca_template, conf_dir)
+        replace_in_file(curr_orca_template, '%geom.xyz%', f'{os.path.basename(curr_file)}')
+        orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
+        if not postpone_orca:
+            subprocess.run(f'{orca_path} {os.path.basename(curr_orca_template)} > {orca_basename}.out 2> {orca_basename}.err', cwd = f'{conf_dir}',
+                           shell=True, capture_output = True, text = True)
+            for f in glob.glob('cregened*tmp*'):
+                os.remove(f)
+        else:
+            print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
+    os.chdir(init_path_top)
 def _orca_three_points_with_control(irc_dict, orca_template = 'orca_three_points.inp', dirname = '.',
                       postpone_orca = False,
                       control_ang=[], control_ang_range=[],
@@ -624,49 +673,6 @@ def _orca_three_points_with_control(irc_dict, orca_template = 'orca_three_points
             print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
         os.chdir(init_path)
     os.chdir(init_path_top)
-def orca_multixyz(multixyzfile, 
-                  orca_template = 'orca_single_point.inp', 
-                  dirname = '.',
-                  postpone_orca = False,):
-    '''
-    Runs ORCA compound job to reoptimize TS and IRC endpoints. DOES NOT DO DFT IRC!
-
-    Parameters
-    ----------
-    irc_dict : str
-        Dictionary f***REMOVED*** pysis_ts_irc, containing paths to TS and both endpoins for each TS conformer.
-    orca_template : str
-        ORCA compound job template. Do not change if you do not know how to set compound job!
-    dirname : TYPE, optional
-        Directory in which to run the job. The default is '.'.
-
-    Returns
-    -------
-    Path to orca output.
-
-    '''
-    init_path_top = os.getcwd()
-    multixyzfile = os.path.abspath(multixyzfile)
-    orca_template = os.path.abspath(orca_template)
-    os.chdir(dirname)
-    multixyz = shutil.copy(multixyzfile, '.')
-    multixyz = split_geoms(multixyz)
-    for file in multixyz[0]:
-        name = re.split(r'\.', file)[0]
-        conf_dir = name + '_orca_SP'
-        os.mkdir(conf_dir)
-        curr_file = shutil.move(file, conf_dir)
-        curr_orca_template = shutil.copy(orca_template, conf_dir)
-        replace_in_file(curr_orca_template, '%geom.xyz%', f'{os.path.basename(curr_file)}')
-        orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
-        if not postpone_orca:
-            subprocess.run(f'{orca_path} {os.path.basename(curr_orca_template)} > {orca_basename}.out 2> {orca_basename}.err', cwd = f'{conf_dir}',
-                           shell=True, capture_output = True, text = True)
-            for f in glob.glob('cregened*tmp*'):
-                os.remove(f)
-        else:
-            print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
-    os.chdir(init_path_top)
 #%%
 ### CATEGORY: auxiliary functions
 def mkbasedir(path_to_xyzfile, prefix='', suffix='', ignore_existing=False):
@@ -713,11 +719,6 @@ def safe_dir(file, dirname, rename=''):
         input_file = os.path.basename(file)
     os.chdir(dirname)
     return input_file, init_path
-def pwd(prnt=False):
-    '''
-    Just python-wrapped pwd
-    '''
-    os.sy***REMOVED***m('pwd')
 def concatenate(filename, list_of_files, add_line_break=False):
     '''
     Concatenates text files (optionally adds an empty line in the end of each chunk)
