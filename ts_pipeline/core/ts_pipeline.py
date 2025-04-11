@@ -14,61 +14,185 @@ orca_path   = tsp_tools["orca"]
 ts_pipe_dir = os.path.dirname(os.path.realpath(__file__))
 
 #%%
-### Functions section
-def mkbasedir(path_to_xyzfile, prefix='', suffix='', ignore_existing=False):
+### CATEGORY: Fragment identification functions
+def find_fragment_atoms(xyzfile, reference_smiles, chrg=0, sanitize=False):
+    """
+    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Uses openbabel to generate mol object with correct bond orders.
+
+    """
+    mol = next(pybel.readfile('xyz', xyzfile))
+    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), sanitize=sanitize)
+    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    matches = mol.GetSubstructMatches(reference_fragment)
+    if not matches:
+        raise ValueError("Reference fragment not found in the molecule!")
+    if len(matches) > 1:
+        raise ValueError("Selected reference fragment ({reference_smiles}) is not unique in the molecule!")
+    return matches[0]  # Return the first match    
+def find_fragment_atoms_with_neighbors(xyzfile, reference_smiles, chrg=0, sanitize=False):
+    """
+    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Uses openbabel to generate mol object with correct bond orders.
+
+    """
+    mol = next(pybel.readfile('xyz', xyzfile))
+    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), removeHs = False, sanitize=sanitize)
+    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    matches = mol.GetSubstructMatches(reference_fragment)
+    if not matches:
+        raise ValueError("Reference fragment not found in the molecule!")
+    if len(matches) > 1:
+        raise ValueError("Selected reference fragment (--dihedral) is not unique in the molecule!")
+    key_atoms = [mol.GetAtomWithIdx(atom_index) for atom_index in matches[0][1:3]]
+    neighbors_indices = []
+    for atom in key_atoms:
+        neighbors_idxs = [neighbor.GetIdx() for neighbor in atom.GetNeighbors() if neighbor.GetIdx() not in matches[0]]
+        neighbors_indices.extend(neighbors_idxs)
+    all_atoms = neighbors_indices + list(matches[0])
+    return all_atoms    
+def get_dihedral(xyzfile, atom1, atom2, atom3, atom4):
     '''
-    Creates a directory with the basename of a file
-        Arguments:
-    filename (str) - name of the file to take basename f***REMOVED***
-    suffix (str)   - modify the basename with the suffix (no predefined separator!)
-    prefix (str)   - modify the basename with the prefix (no predefined separator!)
-        Returns:
-    path (str) - path to copied file in the created directory
+    Measures dihedral angle in an .xyz molecule.
+    
+    Parameters
+    ----------
+    xyzfile : str
+        xyz geometry file.
+    atom1, atom2, atom3, atom4 : ints
+        "Natural" atom numbers (with numbering starting at 1!)
+
+    Returns
+    -------
+    Dihedral in degrees.
+
     '''
-    filename = os.path.basename(path_to_xyzfile)
-    print(filename)
-    split_name = re.split(r'\.', filename)
-    dirname = split_name[0]
-    if suffix or prefix:
-        dirname = prefix + dirname + suffix
-    if ignore_existing:
-        try:
-            os.mkdir(dirname)
-        except FileExistsError:
-            print(f'Directory {dirname} exists, but still trying to proceed')
-    else:
-        os.mkdir(dirname)
-    path = os.path.abspath(dirname)
-    print(f'{dirname} created')
-    return path
-def safe_dir(file, dirname, rename=''):
+    try:
+        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+        atoms = list(map(lambda x: x-1, [atom1, atom2, atom3, atom4]))
+        dihedral = rdMolTransforms.GetDihedralDeg(mol.GetConformer(), *atoms)
+        return dihedral
+    except AttributeError as e:
+        print(e)
+        return None
+def get_angle(xyzfile, atom1, atom2, atom3):
     '''
-    Moves shell process one layer deeper into the file tree (to prevent overwriting files)
-        Arguments:
-    file     - file to move
-    dir      - dir to move and cd into
-        Returns:
-    init_path - initial directory
+    Measures angle in an .xyz molecule.
+    
+    Parameters
+    ----------
+    xyzfile : str
+        xyz geometry file.
+    atom1, atom2, atom3 : ints
+        "Natural" atom numbers (with numbering starting at 1!)
+
+    Returns
+    -------
+    Angle in degrees.
+
     '''
-    init_path = os.getcwd()
-    if rename:
-        shutil.copy(file, dirname + '/' + rename)
-        input_file = os.path.basename(dirname + '/' + rename)
-    else:
-        shutil.copy(file, dirname)
-        input_file = os.path.basename(file)
-    os.chdir(dirname)
-    return input_file, init_path
-def ***REMOVED***p():
-    def number_generator():
-        num = 1
-        while True:
-            yield num
-            num += 1
-    gen = number_generator()  # Create the generator instance
-    def next_number():
-        print('Step ', next(gen), ' of TS_pipe script')  # Automatically print the next number
-    return next_number  # Return the function that prints the next number
+    try:
+        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+        atoms = list(map(lambda x: x-1, [atom1, atom2, atom3]))
+        angle = rdMolTransforms.GetAngleDeg(mol.GetConformer(), *atoms)
+        return angle
+    except AttributeError as e:
+        print(e)
+        return None
+def get_distance(xyzfile, atom1, atom2):
+    '''
+    Measures distance in an .xyz molecule.
+    
+    Parameters
+    ----------
+    xyzfile : str
+        xyz geometry file.
+    atom1, atom2 : ints
+        "Natural" atom numbers (with numbering starting at 1!)
+
+    Returns
+    -------
+    Distance in ångström (hello f***REMOVED*** Uppsala University!).
+
+    '''
+    try:
+        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+        atoms = list(map(lambda x: x-1, [atom1, atom2]))
+        distance = rdMolTransforms.GetBondLength(mol.GetConformer(), *atoms)
+        return distance
+    except AttributeError as e:
+        print(e)
+        return None
+def _find_fragment_atoms_rdkit(xyzfile, reference_smiles, chrg=0):
+    """
+    Deprecated.
+    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+
+    Fixes:
+    - Uses RDKit's DetermineConnectivity() to assign bonds to XYZ molecules.
+    - Sanitizes the molecule to ensure valence is properly assigned.
+    
+    :param mol: RDKit molecule
+    :param reference_fragment: RDKit molecule representing the common fragment
+    :return: List of atom indices that match the fragment
+    """
+    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile, )
+    rdDetermineBonds.DetermineConnectivity(mol, charge=chrg)
+    rdDetermineBonds.DetermineBondOrders(mol, charge=chrg)
+    Chem.SanitizeMol(mol)
+    Chem.Kekulize(mol)
+    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    matches = mol.GetSubstructMatches(reference_fragment)
+    if not matches:
+        raise ValueError("Reference fragment not found in the molecule!")
+    return matches[0]  # Return the first match    
+def _find_fragment_atoms_with_hydrogens(xyzfile, reference_smiles, chrg=0, sanitize=False):
+    """
+    Deprecated.
+    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Uses openbabel to generate mol object with correct bond orders.
+
+    """
+    mol = next(pybel.readfile('xyz', xyzfile))
+    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), removeHs = False, sanitize=sanitize)
+    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    matches = mol.GetSubstructMatches(reference_fragment)
+    if not matches:
+        raise ValueError("Reference fragment not found in the molecule!")
+    if len(matches) > 1:
+        raise ValueError("Selected reference fragment (--dihedral) is not unique in the molecule!")
+    key_atoms = [mol.GetAtomWithIdx(atom_index) for atom_index in matches[0][1:3]]
+    hydrogen_indices = []
+    for atom in key_atoms:
+        hydrogen_idxs = [neighbor.GetIdx() for neighbor in atom.GetNeighbors() if neighbor.GetSymbol() == "H"]
+        hydrogen_indices.extend(hydrogen_idxs)
+    all_atoms = hydrogen_indices + list(matches[0])
+    return all_atoms    
+def _find_fragment_atoms_ibo(xyzfile, reference_smiles, chrg=0):
+    """
+    Deprecated.
+    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    IGNORES BOND ORDERS
+
+    Fixes:
+    - Uses RDKit's DetermineConnectivity() to assign bonds to XYZ molecules.
+    - Sanitizes the molecule to ensure valence is properly assigned.
+    
+    :param mol: RDKit molecule
+    :param reference_fragment: RDKit molecule representing the common fragment
+    :return: List of atom indices that match the fragment
+    """
+    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile, )
+    rdDetermineBonds.DetermineConnectivity(mol, charge=chrg)
+    Chem.SanitizeMol(mol)
+    Chem.Kekulize(mol)
+    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    matches = mol.GetSubstructMatches(reference_fragment)
+    if not matches:
+        raise ValueError("Reference fragment not found in the molecule!")
+    return matches[0]  # Return the first match    
+#%%
+### CATEGORY: xTB invoking functions
 def xtb_opt(input_file, dirname='.', model='--gfn2', solvent='', optlev='', etemp=''):
     '''
     Optimizes molecule filename.xyz with xtb at gfn2 level of theory
@@ -151,9 +275,10 @@ $end'''
     final_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return final_path
-def xtb_scan_inversion(input_file, dirname='.', model='--gfn2', solvent='',
+def _xtb_scan_inversion(input_file, dirname='.', model='--gfn2', solvent='',
                        angle='0,0,0,0.0', scan='0,0,0', optlev=''):
     '''
+    Deprecated.
     INVERSION FOR MORE THAN 180 DEGREES IS PROBLEMATIC
     Run a scan along selected angle of molecule filename.xyz with xtb at gfn2 level of theory
         Arguments:
@@ -174,11 +299,8 @@ $end'''
     inverted_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return inverted_path
-def pwd(prnt=False):
-    '''
-    Just python-wrapped pwd
-    '''
-    os.sy***REMOVED***m('pwd')
+#%%
+### CATEGORY: pysisyphus invoking functions
 def pysis_gs(input_yaml, xyz_1, xyz_2, dirname='.'):
     '''
     Calls pysis (pysisyphus) growing string method with .yaml input and geometries xyz_1 and xyz_2
@@ -283,131 +405,8 @@ def pysis_ts_irc(input_yaml, xyz, dirname = '.'):
         os.chdir(init_path)
     os.chdir(init_path_top)
     return reoptimized_TSes
-def concatenate(filename, list_of_files, add_line_break=False):
-    '''
-    Concatenates text files (optionally adds an empty line in the end of each chunk)
-    
-    Parameters
-    ----------
-    filename : string
-        Target file for concatenation
-    list_of_files : list of string
-        List of files for concatenation
-
-    Returns
-    -------
-    Path to the output file with contatenated text
-    '''
-    with open(filename, 'w') as file:
-        for chunk in list_of_files:
-            with open(chunk, 'r') as chunk:
-                to_append = chunk.read()
-                file.write(to_append)
-                if add_line_break: file.write('\n')
-    return filename
-def find_fragment_atoms_old(xyzfile, reference_smiles, chrg=0):
-    """
-    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
-
-    Fixes:
-    - Uses RDKit's DetermineConnectivity() to assign bonds to XYZ molecules.
-    - Sanitizes the molecule to ensure valence is properly assigned.
-    
-    :param mol: RDKit molecule
-    :param reference_fragment: RDKit molecule representing the common fragment
-    :return: List of atom indices that match the fragment
-    """
-    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile, )
-    rdDetermineBonds.DetermineConnectivity(mol, charge=chrg)
-    rdDetermineBonds.DetermineBondOrders(mol, charge=chrg)
-    Chem.SanitizeMol(mol)
-    Chem.Kekulize(mol)
-    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
-    matches = mol.GetSubstructMatches(reference_fragment)
-    if not matches:
-        raise ValueError("Reference fragment not found in the molecule!")
-    return matches[0]  # Return the first match    
-def find_fragment_atoms(xyzfile, reference_smiles, chrg=0, sanitize=True):
-    """
-    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
-    Uses openbabel to generate mol object with correct bond orders.
-
-    """
-    mol = next(pybel.readfile('xyz', xyzfile))
-    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), sanitize=sanitize)
-    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
-    matches = mol.GetSubstructMatches(reference_fragment)
-    if not matches:
-        raise ValueError("Reference fragment not found in the molecule!")
-    if len(matches) > 1:
-        raise ValueError("Selected reference fragment ({reference_smiles}) is not unique in the molecule!")
-    return matches[0]  # Return the first match    
-def find_fragment_atoms_with_hydrogens(xyzfile, reference_smiles, chrg=0, sanitize=False):
-    """
-    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
-    Uses openbabel to generate mol object with correct bond orders.
-
-    """
-    mol = next(pybel.readfile('xyz', xyzfile))
-    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), removeHs = False, sanitize=sanitize)
-    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
-    matches = mol.GetSubstructMatches(reference_fragment)
-    if not matches:
-        raise ValueError("Reference fragment not found in the molecule!")
-    if len(matches) > 1:
-        raise ValueError("Selected reference fragment (--dihedral) is not unique in the molecule!")
-    key_atoms = [mol.GetAtomWithIdx(atom_index) for atom_index in matches[0][1:3]]
-    hydrogen_indices = []
-    for atom in key_atoms:
-        hydrogen_idxs = [neighbor.GetIdx() for neighbor in atom.GetNeighbors() if neighbor.GetSymbol() == "H"]
-        hydrogen_indices.extend(hydrogen_idxs)
-    all_atoms = hydrogen_indices + list(matches[0])
-    return all_atoms    
-def find_fragment_atoms_with_neighbors(xyzfile, reference_smiles, chrg=0, sanitize=False):
-    """
-    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
-    Uses openbabel to generate mol object with correct bond orders.
-
-    """
-    mol = next(pybel.readfile('xyz', xyzfile))
-    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), removeHs = False, sanitize=sanitize)
-    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
-    matches = mol.GetSubstructMatches(reference_fragment)
-    if not matches:
-        raise ValueError("Reference fragment not found in the molecule!")
-    if len(matches) > 1:
-        raise ValueError("Selected reference fragment (--dihedral) is not unique in the molecule!")
-    key_atoms = [mol.GetAtomWithIdx(atom_index) for atom_index in matches[0][1:3]]
-    neighbors_indices = []
-    for atom in key_atoms:
-        neighbors_idxs = [neighbor.GetIdx() for neighbor in atom.GetNeighbors() if neighbor.GetIdx() not in matches[0]]
-        neighbors_indices.extend(neighbors_idxs)
-    all_atoms = neighbors_indices + list(matches[0])
-    return all_atoms    
-    
-def find_fragment_atoms_ibo(xyzfile, reference_smiles, chrg=0):
-    """
-    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
-    IGNORES BOND ORDERS
-
-    Fixes:
-    - Uses RDKit's DetermineConnectivity() to assign bonds to XYZ molecules.
-    - Sanitizes the molecule to ensure valence is properly assigned.
-    
-    :param mol: RDKit molecule
-    :param reference_fragment: RDKit molecule representing the common fragment
-    :return: List of atom indices that match the fragment
-    """
-    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile, )
-    rdDetermineBonds.DetermineConnectivity(mol, charge=chrg)
-    Chem.SanitizeMol(mol)
-    Chem.Kekulize(mol)
-    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
-    matches = mol.GetSubstructMatches(reference_fragment)
-    if not matches:
-        raise ValueError("Reference fragment not found in the molecule!")
-    return matches[0]  # Return the first match    
-    
+#%%
+### CATEGORY: CREST invoking functions    
 def crest_constrained_sampling(input_file,
                                dirname='.',
                                model='--gfn2', 
@@ -456,72 +455,6 @@ def crest_simple_sampling(input_file,
     conformers_path = f'{dirname}/crest_conformers.xyz'
     os.chdir(initial_path)
     return conformers_path
-def crest_constrained_sampling_old(input_file,
-                                  dirname='.',
-                                  model='--gfn2', 
-                                  solvent='', 
-                                  angles=[],
-                                  dihedral=[],
-                                  optlev='', 
-                                  dlen='',
-                                  mdlen='',
-                                  cinp='constraints.inp'):
-    '''
-    Runs CREST conformational sampling with constrain (predefined in the function).
-    '''
-    input_file, initial_path = safe_dir(input_file, dirname)    
-    os.chdir(dirname)
-    dihedral = ','.join(map(str,dihedral))
-    dihedral = dihedral + ', auto'
-    constraint_input=f'''$constrain
- force constant=5.00
- dihedral: {dihedral}
- angle: {angles[0]}
-$end'''
-    if len(angles) > 1:
-        constraint_input=f'''$constrain
- force constant=5.00
- dihedral: {dihedral}
- angle: {angles[0]}
- angle: {angles[1]}
-    $end'''
-    with open('constraints.inp','w') as file:
-        file.write(constraint_input)
-    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
-    os.sy***REMOVED***m(crest_line)
-    TS_conformers_path = f'{dirname}/crest_conformers.xyz'
-    os.chdir(initial_path)
-    return TS_conformers_path
-geometry_regex = re.compile(r'(?m)\s*\d+\s*\s+.+\s+(?:\w+\s+-?\d+\.\d+\s+-?\d+\.\d+\s+-?\d+\.\d+\s*)+')
-def split_geoms(xyzfile, regex = geometry_regex, write_geometries = True):
-    '''
-    Splits multixyz file into set of single geometries and writes into separate files
-        Arguments:
-    xyzfile          - multixyz file (usually .xyz or .trj)
-    regex            - regex to detect geometry inside xyz file
-        Returns:
-    geometries       - list of geometry strings
-    filenames        - corresponding split files
-    '''
-    basename = os.path.basename(xyzfile)
-    basename = re.split(r'\.', basename)[0]
-    with open(xyzfile, 'r') as file:
-        data = file.read()
-    geometries = re.findall(regex, data)
-    filenames = []
-    if write_geometries:
-        for i, geom in enumerate(geometries):
-            num_digits = len(str(len(geometries)))
-            filename = f'{basename}_{i:0{num_digits}}.xyz'
-            filenames.append(filename)
-            with open(filename, 'w') as file:
-                file.write(geom)
-    return filenames, geometries
-def replace_in_file(file, find, replace):
-    with open(file) as r:
-        text = r.read().replace(find, replace)
-    with open(file, "w") as w:
-        w.write(text)
 def cregen(ensemble_file, extra_params='', dirname = '.', sorted_ensemble=False):
     '''
     Runs standalone CREST CREGEN procedure on an ensemble file
@@ -549,11 +482,95 @@ def cregen(ensemble_file, extra_params='', dirname = '.', sorted_ensemble=False)
         resulting_ensemble = os.path.abspath('crest_ensemble.xyz')
     os.chdir(init_path)
     return resulting_ensemble
+def _crest_constrained_sampling_old(input_file,
+                                  dirname='.',
+                                  model='--gfn2', 
+                                  solvent='', 
+                                  angles=[],
+                                  dihedral=[],
+                                  optlev='', 
+                                  dlen='',
+                                  mdlen='',
+                                  cinp='constraints.inp'):
+    '''
+    Deprecated.
+    Runs CREST conformational sampling with constrain (predefined in the function).
+    '''
+    input_file, initial_path = safe_dir(input_file, dirname)    
+    os.chdir(dirname)
+    dihedral = ','.join(map(str,dihedral))
+    dihedral = dihedral + ', auto'
+    constraint_input=f'''$constrain
+ force constant=5.00
+ dihedral: {dihedral}
+ angle: {angles[0]}
+$end'''
+    if len(angles) > 1:
+        constraint_input=f'''$constrain
+ force constant=5.00
+ dihedral: {dihedral}
+ angle: {angles[0]}
+ angle: {angles[1]}
+    $end'''
+    with open('constraints.inp','w') as file:
+        file.write(constraint_input)
+    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
+    os.sy***REMOVED***m(crest_line)
+    TS_conformers_path = f'{dirname}/crest_conformers.xyz'
+    os.chdir(initial_path)
+    return TS_conformers_path
+#%%
+### CATEGORY: ORCA invoking functions
 def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname = '.',
+                      postpone_orca = False,):
+    '''
+    Runs ORCA compound job to reoptimize TS and IRC endpoints. DOES NOT DO DFT IRC!
+
+    Parameters
+    ----------
+    irc_dict : str
+        Dictionary f***REMOVED*** pysis_ts_irc, containing paths to TS and both endpoins for each TS conformer.
+    orca_template : str
+        ORCA compound job template. Do not change if you do not know how to set compound job!
+    dirname : TYPE, optional
+        Directory in which to run the job. The default is '.'.
+
+    Returns
+    -------
+    Path to orca output.
+
+    '''
+    init_path_top = os.getcwd()
+    os.chdir(dirname)
+    basename = irc_dict['basename']
+    orca_template = shutil.copy(orca_template, f'{basename}.inp')
+    for conformer, xyzs in irc_dict['conformers'].items():
+        curr_conf_dir = re.split(r'\.', conformer)[0]
+        init_path = os.getcwd()
+        os.mkdir(curr_conf_dir)
+        os.chdir(curr_conf_dir)
+        for value in xyzs.values():
+            shutil.copy(value, '.')
+        curr_orca_template = shutil.copy(f'../{orca_template}', '.')
+        replace_in_file(curr_orca_template, '%ts_geom.xyz%', 'ts_final_geometry.xyz')
+        replace_in_file(curr_orca_template, '%irc_F.xyz%', 'forward_end_opt.xyz')
+        replace_in_file(curr_orca_template, '%irc_B.xyz%', 'backward_end_opt.xyz')
+        replace_in_file(curr_orca_template, 'orca_Compound_1.hess', f'{basename}_Compound_1.hess')
+        orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
+        if not postpone_orca:
+            os.sy***REMOVED***m(f'{orca_path} {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
+            for f in glob.glob('cregened*tmp*'):
+                os.remove(f)
+        else:
+            print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
+        os.chdir(init_path)
+    os.chdir(init_path_top)
+def _orca_three_points_with_control(irc_dict, orca_template = 'orca_three_points.inp', dirname = '.',
                       postpone_orca = False,
                       control_ang=[], control_ang_range=[],
                       control_dih=[], control_dih_range=[]):
     '''
+    TODO
     Runs ORCA compound job to reoptimize TS and IRC endpoints. DOES NOT DO DFT IRC!
 
     Parameters
@@ -650,81 +667,124 @@ def orca_multixyz(multixyzfile,
         else:
             print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
     os.chdir(init_path_top)
-
-
-def get_dihedral(xyzfile, atom1, atom2, atom3, atom4):
+#%%
+### CATEGORY: auxiliary functions
+def mkbasedir(path_to_xyzfile, prefix='', suffix='', ignore_existing=False):
     '''
-    Measures dihedral angle in an .xyz molecule.
+    Creates a directory with the basename of a file
+        Arguments:
+    filename (str) - name of the file to take basename f***REMOVED***
+    suffix (str)   - modify the basename with the suffix (no predefined separator!)
+    prefix (str)   - modify the basename with the prefix (no predefined separator!)
+        Returns:
+    path (str) - path to copied file in the created directory
+    '''
+    filename = os.path.basename(path_to_xyzfile)
+    print(filename)
+    split_name = re.split(r'\.', filename)
+    dirname = split_name[0]
+    if suffix or prefix:
+        dirname = prefix + dirname + suffix
+    if ignore_existing:
+        try:
+            os.mkdir(dirname)
+        except FileExistsError:
+            print(f'Directory {dirname} exists, but still trying to proceed')
+    else:
+        os.mkdir(dirname)
+    path = os.path.abspath(dirname)
+    print(f'{dirname} created')
+    return path
+def safe_dir(file, dirname, rename=''):
+    '''
+    Moves shell process one layer deeper into the file tree (to prevent overwriting files)
+        Arguments:
+    file     - file to move
+    dir      - dir to move and cd into
+        Returns:
+    init_path - initial directory
+    '''
+    init_path = os.getcwd()
+    if rename:
+        shutil.copy(file, dirname + '/' + rename)
+        input_file = os.path.basename(dirname + '/' + rename)
+    else:
+        shutil.copy(file, dirname)
+        input_file = os.path.basename(file)
+    os.chdir(dirname)
+    return input_file, init_path
+def pwd(prnt=False):
+    '''
+    Just python-wrapped pwd
+    '''
+    os.sy***REMOVED***m('pwd')
+def concatenate(filename, list_of_files, add_line_break=False):
+    '''
+    Concatenates text files (optionally adds an empty line in the end of each chunk)
     
     Parameters
     ----------
-    xyzfile : str
-        xyz geometry file.
-    atom1, atom2, atom3, atom4 : ints
-        "Natural" atom numbers (with numbering starting at 1!)
+    filename : string
+        Target file for concatenation
+    list_of_files : list of string
+        List of files for concatenation
 
     Returns
     -------
-    Dihedral in degrees.
-
+    Path to the output file with contatenated text
     '''
-    try:
-        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
-        atoms = list(map(lambda x: x-1, [atom1, atom2, atom3, atom4]))
-        dihedral = rdMolTransforms.GetDihedralDeg(mol.GetConformer(), *atoms)
-        return dihedral
-    except AttributeError as e:
-        print(e)
-        return None
-def get_angle(xyzfile, atom1, atom2, atom3):
+    with open(filename, 'w') as file:
+        for chunk in list_of_files:
+            with open(chunk, 'r') as chunk:
+                to_append = chunk.read()
+                file.write(to_append)
+                if add_line_break: file.write('\n')
+    return filename
+
+def _***REMOVED***p():
     '''
-    Measures angle in an .xyz molecule.
-    
-    Parameters
-    ----------
-    xyzfile : str
-        xyz geometry file.
-    atom1, atom2, atom3 : ints
-        "Natural" atom numbers (with numbering starting at 1!)
-
-    Returns
-    -------
-    Angle in degrees.
-
+    Despecated
+    Automatic ***REMOVED***p counter
     '''
-    try:
-        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
-        atoms = list(map(lambda x: x-1, [atom1, atom2, atom3]))
-        angle = rdMolTransforms.GetAngleDeg(mol.GetConformer(), *atoms)
-        return angle
-    except AttributeError as e:
-        print(e)
-        return None
-def get_distance(xyzfile, atom1, atom2):
+    def number_generator():
+        num = 1
+        while True:
+            yield num
+            num += 1
+    gen = number_generator()  # Create the generator instance
+    def next_number():
+        print('Step ', next(gen), ' of TS_pipe script')  # Automatically print the next number
+    return next_number  # Return the function that prints the next number
+geometry_regex = re.compile(r'(?m)\s*\d+\s*\s+.+\s+(?:\w+\s+-?\d+\.\d+\s+-?\d+\.\d+\s+-?\d+\.\d+\s*)+')
+def split_geoms(xyzfile, regex = geometry_regex, write_geometries = True):
     '''
-    Measures distance in an .xyz molecule.
-    
-    Parameters
-    ----------
-    xyzfile : str
-        xyz geometry file.
-    atom1, atom2 : ints
-        "Natural" atom numbers (with numbering starting at 1!)
-
-    Returns
-    -------
-    Distance in ångström (hello f***REMOVED*** Uppsala University!).
-
+    Splits multixyz file into set of single geometries and writes into separate files
+        Arguments:
+    xyzfile          - multixyz file (usually .xyz or .trj)
+    regex            - regex to detect geometry inside xyz file
+        Returns:
+    geometries       - list of geometry strings
+    filenames        - corresponding split files
     '''
-    try:
-        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
-        atoms = list(map(lambda x: x-1, [atom1, atom2]))
-        distance = rdMolTransforms.GetBondLength(mol.GetConformer(), *atoms)
-        return distance
-    except AttributeError as e:
-        print(e)
-        return None
-
+    basename = os.path.basename(xyzfile)
+    basename = re.split(r'\.', basename)[0]
+    with open(xyzfile, 'r') as file:
+        data = file.read()
+    geometries = re.findall(regex, data)
+    filenames = []
+    if write_geometries:
+        for i, geom in enumerate(geometries):
+            num_digits = len(str(len(geometries)))
+            filename = f'{basename}_{i:0{num_digits}}.xyz'
+            filenames.append(filename)
+            with open(filename, 'w') as file:
+                file.write(geom)
+    return filenames, geometries
+def replace_in_file(file, find, replace):
+    with open(file) as r:
+        text = r.read().replace(find, replace)
+    with open(file, "w") as w:
+        w.write(text)
 def orca_user_confirmation():
     while True:
         user_input = input("No ORCA template provided for this run, thus it will stop after IRC is done for all TS conformers. Are you sure? (yes/no) [yes]: ")
@@ -754,7 +814,8 @@ def confirm_orca_template_exists(orca_template_file, ask_yes = True):
                 return os.path.abspath(f'{template_dir}/{os.path.basename(orca_template_file)}')
             elif not os.path.isfile(f'{template_dir}/{os.path.basename(orca_template_file)}'):
                 sys.exit(f'ORCA template sugge***REMOVED***d by user, but no template file found in current directory nor among templates. Aborting.')
-                    
+#%%
+### CATEGORY: processing functions                    
 def Williams_proc1(mol, e_dict, verbose = False):
 #    R = 8.31446261815324
     R = 8.314
