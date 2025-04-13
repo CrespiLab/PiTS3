@@ -44,9 +44,9 @@ C1=CCNC=C1    - for diarylethenes
     mols = list(map(os.path.abspath, mols))
     if args.orca_template:
         if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive':
-            args.orca_template = args.orca_template = tsp.confirm_orca_template_exists(args.orca_template, ask_yes = True)
+            args.orca_template = tsp.confirm_orca_template_exists(args.orca_template, ask_yes = True)
         else:
-            args.orca_template = args.orca_template = tsp.confirm_orca_template_exists(args.orca_template, ask_yes = False)
+            args.orca_template = tsp.confirm_orca_template_exists(args.orca_template, ask_yes = False)
     else:
         if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive':
             tsp.orca_user_confirmation()
