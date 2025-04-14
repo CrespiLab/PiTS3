@@ -181,7 +181,7 @@ C1=CCNC=C1    - for diarylethenes
         match args.mode:
             case 'C-C=C-C':
                 check_dih_value = tsp.get_dihedral(TS, *dihedral_nums)
-                if abs(check_dih_value) < 70.0 or abs(check_dih_value) > 110.0:
+                if abs(check_dih_value) < 60.0 or abs(check_dih_value) > 120.0:
                     print(f'Key parameter, dihedral {dihedral_nums} = {check_dih_value}, it is too far f***REMOVED*** 90.0, starting the next molecule (or stopping)')
                     continue
             case 'C-C=N-C':
