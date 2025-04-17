@@ -31,13 +31,13 @@ New_Step
   end
 Step_End
 
-# Step 4: Optimization of forward end f***REMOVED*** pysisyphus
+# Step 4: Optimization of forward end from pysisyphus
 New_Step
   ! wB97x-3c Opt Freq
   *xyzfile 0 1 %irc_F.xyz%
 Step_End
 
-# Step 5: Optimization of backward end f***REMOVED*** pysisyphus
+# Step 5: Optimization of backward end from pysisyphus
 New_Step
   ! wB97x-3c Opt Freq
   *xyzfile 0 1 %irc_B.xyz%

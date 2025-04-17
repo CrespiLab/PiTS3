@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import os, re, shutil, sys, glob, math, subprocess
-f***REMOVED*** openbabel import pybel
-f***REMOVED*** rdkit import Chem
-f***REMOVED*** rdkit.Chem import rdmolfiles, rdDetermineBonds, rdMolTransforms
-f***REMOVED*** ts_pipeline.config import TOOLS as tsp_tools
+from openbabel import pybel
+from rdkit import Chem
+from rdkit.Chem import rdmolfiles, rdDetermineBonds, rdMolTransforms
+from ts_pipeline.config import TOOLS as tsp_tools
 
 ### Installation section
 pysis_path  = tsp_tools["pysis"]
@@ -17,13 +17,13 @@ ts_pipe_dir = os.path.dirname(os.path.realpath(__file__))
 ### CATEGORY: Fragment identification functions
 def find_fragment_atoms(xyzfile, reference_smiles, chrg=0, sanitize=False):
     """
-    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Finds and extracts the atom indices of a reference fragment in a molecule from an XYZ file.
     Uses openbabel to generate mol object with correct bond orders.
 
     """
     mol = next(pybel.readfile('xyz', xyzfile))
-    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), sanitize=sanitize)
-    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    mol = rdmolfiles.MolFromMol2Block(mol.write('mol2'), sanitize=sanitize)
+    reference_fragment = Chem.MolFromSmiles(reference_smiles)
     matches = mol.GetSubstructMatches(reference_fragment)
     if not matches:
         raise ValueError("Reference fragment not found in the molecule!")
@@ -32,13 +32,13 @@ def find_fragment_atoms(xyzfile, reference_smiles, chrg=0, sanitize=False):
     return matches[0]  # Return the first match    
 def find_fragment_atoms_with_neighbors(xyzfile, reference_smiles, chrg=0, sanitize=False):
     """
-    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Finds and extracts the atom indices of a reference fragment in a molecule from an XYZ file.
     Uses openbabel to generate mol object with correct bond orders.
 
     """
     mol = next(pybel.readfile('xyz', xyzfile))
-    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), removeHs = False, sanitize=sanitize)
-    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    mol = rdmolfiles.MolFromMol2Block(mol.write('mol2'), removeHs = False, sanitize=sanitize)
+    reference_fragment = Chem.MolFromSmiles(reference_smiles)
     matches = mol.GetSubstructMatches(reference_fragment)
     if not matches:
         raise ValueError("Reference fragment not found in the molecule!")
@@ -68,7 +68,7 @@ def get_dihedral(xyzfile, atom1, atom2, atom3, atom4):
 
     '''
     try:
-        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+        mol = rdmolfiles.MolFromXYZFile(xyzfile)
         atoms = list(map(lambda x: x-1, [atom1, atom2, atom3, atom4]))
         dihedral = rdMolTransforms.GetDihedralDeg(mol.GetConformer(), *atoms)
         return dihedral
@@ -92,7 +92,7 @@ def get_angle(xyzfile, atom1, atom2, atom3):
 
     '''
     try:
-        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+        mol = rdmolfiles.MolFromXYZFile(xyzfile)
         atoms = list(map(lambda x: x-1, [atom1, atom2, atom3]))
         angle = rdMolTransforms.GetAngleDeg(mol.GetConformer(), *atoms)
         return angle
@@ -112,11 +112,11 @@ def get_distance(xyzfile, atom1, atom2):
 
     Returns
     -------
-    Distance in ångström (hello f***REMOVED*** Uppsala University!).
+    Distance in ångström (hello from Uppsala University!).
 
     '''
     try:
-        mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile)
+        mol = rdmolfiles.MolFromXYZFile(xyzfile)
         atoms = list(map(lambda x: x-1, [atom1, atom2]))
         distance = rdMolTransforms.GetBondLength(mol.GetConformer(), *atoms)
         return distance
@@ -126,7 +126,7 @@ def get_distance(xyzfile, atom1, atom2):
 def _find_fragment_atoms_rdkit(xyzfile, reference_smiles, chrg=0):
     """
     Deprecated.
-    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Finds and extracts the atom indices of a reference fragment in a molecule from an XYZ file.
 
     Fixes:
     - Uses RDKit's DetermineConnectivity() to assign bonds to XYZ molecules.
@@ -136,12 +136,12 @@ def _find_fragment_atoms_rdkit(xyzfile, reference_smiles, chrg=0):
     :param reference_fragment: RDKit molecule representing the common fragment
     :return: List of atom indices that match the fragment
     """
-    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile, )
+    mol = rdmolfiles.MolFromXYZFile(xyzfile, )
     rdDetermineBonds.DetermineConnectivity(mol, charge=chrg)
     rdDetermineBonds.DetermineBondOrders(mol, charge=chrg)
     Chem.SanitizeMol(mol)
     Chem.Kekulize(mol)
-    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    reference_fragment = Chem.MolFromSmiles(reference_smiles)
     matches = mol.GetSubstructMatches(reference_fragment)
     if not matches:
         raise ValueError("Reference fragment not found in the molecule!")
@@ -149,13 +149,13 @@ def _find_fragment_atoms_rdkit(xyzfile, reference_smiles, chrg=0):
 def _find_fragment_atoms_with_hydrogens(xyzfile, reference_smiles, chrg=0, sanitize=False):
     """
     Deprecated.
-    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Finds and extracts the atom indices of a reference fragment in a molecule from an XYZ file.
     Uses openbabel to generate mol object with correct bond orders.
 
     """
     mol = next(pybel.readfile('xyz', xyzfile))
-    mol = rdmolfiles.MolF***REMOVED***Mol2Block(mol.write('mol2'), removeHs = False, sanitize=sanitize)
-    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    mol = rdmolfiles.MolFromMol2Block(mol.write('mol2'), removeHs = False, sanitize=sanitize)
+    reference_fragment = Chem.MolFromSmiles(reference_smiles)
     matches = mol.GetSubstructMatches(reference_fragment)
     if not matches:
         raise ValueError("Reference fragment not found in the molecule!")
@@ -171,7 +171,7 @@ def _find_fragment_atoms_with_hydrogens(xyzfile, reference_smiles, chrg=0, sanit
 def _find_fragment_atoms_ibo(xyzfile, reference_smiles, chrg=0):
     """
     Deprecated.
-    Finds and extracts the atom indices of a reference fragment in a molecule f***REMOVED*** an XYZ file.
+    Finds and extracts the atom indices of a reference fragment in a molecule from an XYZ file.
     IGNORES BOND ORDERS
 
     Fixes:
@@ -182,11 +182,11 @@ def _find_fragment_atoms_ibo(xyzfile, reference_smiles, chrg=0):
     :param reference_fragment: RDKit molecule representing the common fragment
     :return: List of atom indices that match the fragment
     """
-    mol = rdmolfiles.MolF***REMOVED***XYZFile(xyzfile, )
+    mol = rdmolfiles.MolFromXYZFile(xyzfile, )
     rdDetermineBonds.DetermineConnectivity(mol, charge=chrg)
     Chem.SanitizeMol(mol)
     Chem.Kekulize(mol)
-    reference_fragment = Chem.MolF***REMOVED***Smiles(reference_smiles)
+    reference_fragment = Chem.MolFromSmiles(reference_smiles)
     matches = mol.GetSubstructMatches(reference_fragment)
     if not matches:
         raise ValueError("Reference fragment not found in the molecule!")
@@ -202,7 +202,7 @@ def xtb_opt(input_file, dirname='.', model='--gfn2', solvent='', optlev='', etem
     opt_path - XYZ geometry of optimized molecule
     '''
     input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
-    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt {model} {solvent} {optlev} {etemp} | tee xtb_opt_stdout.log')
+    os.system(f'{xtb_path} {input_file} --opt {model} {solvent} {optlev} {etemp} | tee xtb_opt_stdout.log')
     opt_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return opt_path
@@ -213,7 +213,7 @@ def xtb_scan_rotation(input_file, dirname='.', model='--gfn2', solvent='',
         Arguments:
     path         - path to XYZ geometry file
         Returns:
-    rotated_path - XYZ geometry of alternative dia***REMOVED***reomer
+    rotated_path - XYZ geometry of alternative diastereomer
     '''
     scan_input=f'''$constrain
  force constant=0.50
@@ -224,7 +224,7 @@ $end'''
     input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
     with open('scan.inp','w') as file:
         file.write(scan_input)
-    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} {etemp} | tee xtb_dih_scan_stdout.log')
+    os.system(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} {etemp} | tee xtb_dih_scan_stdout.log')
     rotated_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return rotated_path
@@ -235,7 +235,7 @@ def xtb_scan_nbd(input_file, dirname='.', model='--gfn2', solvent='',
         Arguments:
     path         - path to XYZ geometry file
         Returns:
-    final_path - XYZ geometry of alternative dia***REMOVED***reomer
+    final_path - XYZ geometry of alternative diastereomer
     '''
     scan_input=f'''$constrain
    force constant=0.5
@@ -249,7 +249,7 @@ $end'''
     input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
     with open('scan.inp','w') as file:
         file.write(scan_input)
-    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} {etemp} | tee xtb_dih_scan_stdout.log')
+    os.system(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} {etemp} | tee xtb_dih_scan_stdout.log')
     final_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return final_path
@@ -260,7 +260,7 @@ def xtb_scan_adae(input_file, dirname='.', model='--gfn2', solvent='',
         Arguments:
     path         - path to XYZ geometry file
         Returns:
-    final_path - XYZ geometry of alternative dia***REMOVED***reomer
+    final_path - XYZ geometry of alternative diastereomer
     '''
     scan_input=f'''$constrain
    force constant=0.5
@@ -271,7 +271,7 @@ $end'''
     input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
     with open('scan.inp','w') as file:
         file.write(scan_input)
-    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} {etemp} | tee xtb_dih_scan_stdout.log')
+    os.system(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} {etemp} | tee xtb_dih_scan_stdout.log')
     final_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return final_path
@@ -284,7 +284,7 @@ def _xtb_scan_inversion(input_file, dirname='.', model='--gfn2', solvent='',
         Arguments:
     path         - path to XYZ geometry file
         Returns:
-    inverted_path - XYZ geometry of alternative dia***REMOVED***reomer
+    inverted_path - XYZ geometry of alternative diastereomer
     '''
     scan_input=f'''$constrain
  force constant=5.00
@@ -295,7 +295,7 @@ $end'''
     input_file, initial_path = safe_dir(input_file, dirname, rename='initial_structure.xyz')
     with open('scan.inp','w') as file:
         file.write(scan_input)
-    os.sy***REMOVED***m(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} | tee xtb_angle_scan.log')
+    os.system(f'{xtb_path} {input_file} --opt --input scan.inp {model} {solvent} {optlev} | tee xtb_angle_scan.log')
     inverted_path = os.path.abspath('xtbopt.xyz')
     os.chdir(initial_path)
     return inverted_path
@@ -316,7 +316,7 @@ def pysis_gs(input_yaml, xyz_1, xyz_2, dirname='.'):
     xyz_1 = safe_dir(xyz_1, dirname, rename='geom_1.xyz')[0]
     xyz_2 = safe_dir(xyz_2, dirname, rename='geom_2.xyz')[0]
     os.chdir(dirname)
-    os.sy***REMOVED***m(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
+    os.system(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
     shutil.rmtree('qm_calcs')
     os.chdir(initial_path)
     TS_path = f'{dirname}/ts_final_geometry.xyz'
@@ -350,7 +350,7 @@ def pysis_ts_reopt(input_yaml, xyz, dirname = '.', concat_breaks=False, irc=Fals
         if irc == True:
             replace_in_file(f'{input_yaml}', 'forward: False', 'forward: True')
             replace_in_file(f'{input_yaml}', 'backward: False', '''backward: True\nendopt:''')
-        os.sy***REMOVED***m(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
+        os.system(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
         shutil.rmtree('qm_calcs')
         reoptimized_TS_conformer = re.split('\.', curr_TS_conformer)[0] + '_reopt.xyz'
         # breakpoint()
@@ -395,7 +395,7 @@ def pysis_ts_irc(input_yaml, xyz, dirname = '.'):
         os.chdir(curr_conf_dir)
         shutil.copy(f'../{input_yaml}', '.')
         replace_in_file(f'{input_yaml}', 'xyzfile.xyz', f'{curr_TS_conformer}')
-        os.sy***REMOVED***m(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
+        os.system(f'{pysis_path} {input_yaml} | tee pysis_stdout.log')
         shutil.rmtree('qm_calcs')
         reoptimized_TS_conformer = re.split('\.', curr_TS_conformer)[0] + '_reopt.xyz'
         # breakpoint()
@@ -440,7 +440,7 @@ $end'''
     with open('constraints.inp','w') as file:
         file.write(constraint_input)
     crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
-    os.sy***REMOVED***m(crest_line)
+    os.system(crest_line)
     TS_conformers_path = f'{dirname}/crest_conformers.xyz'
     os.chdir(initial_path)
     return TS_conformers_path
@@ -457,7 +457,7 @@ def crest_simple_sampling(input_file,
     input_file, initial_path = safe_dir(input_file, dirname)    
     os.chdir(dirname)
     crest_line=f'{crest_path} {input_file} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
-    os.sy***REMOVED***m(crest_line)
+    os.system(crest_line)
     conformers_path = f'{dirname}/crest_conformers.xyz'
     os.chdir(initial_path)
     return conformers_path
@@ -479,7 +479,7 @@ def cregen(ensemble_file, extra_params='', dirname = '.', sorted_ensemble=False)
 
     '''
     ensemble_file, init_path = safe_dir(ensemble_file, dirname)
-    os.sy***REMOVED***m(f'{crest_path} {ensemble_file} --cregen {ensemble_file} {extra_params} | tee cregen_stdout.log')
+    os.system(f'{crest_path} {ensemble_file} --cregen {ensemble_file} {extra_params} | tee cregen_stdout.log')
     basename = os.path.basename(ensemble_file)
     basename = re.split(r'\.', basename)[0]
     if sorted_ensemble == True:
@@ -521,7 +521,7 @@ $end'''
     with open('constraints.inp','w') as file:
         file.write(constraint_input)
     crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
-    os.sy***REMOVED***m(crest_line)
+    os.system(crest_line)
     TS_conformers_path = f'{dirname}/crest_conformers.xyz'
     os.chdir(initial_path)
     return TS_conformers_path
@@ -535,7 +535,7 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
     Parameters
     ----------
     irc_dict : str
-        Dictionary f***REMOVED*** pysis_ts_irc, containing paths to TS and both endpoins for each TS conformer.
+        Dictionary from pysis_ts_irc, containing paths to TS and both endpoins for each TS conformer.
     orca_template : str
         ORCA compound job template. Do not change if you do not know how to set compound job!
     dirname : TYPE, optional
@@ -564,11 +564,11 @@ def orca_three_points(irc_dict, orca_template = 'orca_three_points.inp', dirname
         replace_in_file(curr_orca_template, 'orca_Compound_1.hess', f'{basename}_Compound_1.hess')
         orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
         if not postpone_orca:
-            os.sy***REMOVED***m(f'{orca_path} {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
+            os.system(f'{orca_path} {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
             for f in glob.glob('cregened*tmp*'):
                 os.remove(f)
         else:
-            print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
+            print(f'--postpone_orca requested. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
         os.chdir(init_path)
     os.chdir(init_path_top)
 def orca_multixyz(multixyzfile, 
@@ -581,7 +581,7 @@ def orca_multixyz(multixyzfile,
     Parameters
     ----------
     irc_dict : str
-        Dictionary f***REMOVED*** pysis_ts_irc, containing paths to TS and both endpoins for each TS conformer.
+        Dictionary from pysis_ts_irc, containing paths to TS and both endpoins for each TS conformer.
     orca_template : str
         ORCA compound job template. Do not change if you do not know how to set compound job!
     dirname : TYPE, optional
@@ -612,7 +612,7 @@ def orca_multixyz(multixyzfile,
             for f in glob.glob('cregened*tmp*'):
                 os.remove(f)
         else:
-            print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
+            print(f'--postpone_orca requested. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
     os.chdir(init_path_top)
 def _orca_three_points_with_control(irc_dict, orca_template = 'orca_three_points.inp', dirname = '.',
                       postpone_orca = False,
@@ -625,7 +625,7 @@ def _orca_three_points_with_control(irc_dict, orca_template = 'orca_three_points
     Parameters
     ----------
     irc_dict : str
-        Dictionary f***REMOVED*** pysis_ts_irc, containing paths to TS and both endpoins for each TS conformer.
+        Dictionary from pysis_ts_irc, containing paths to TS and both endpoins for each TS conformer.
     orca_template : str
         ORCA compound job template. Do not change if you do not know how to set compound job!
     dirname : TYPE, optional
@@ -666,11 +666,11 @@ def _orca_three_points_with_control(irc_dict, orca_template = 'orca_three_points
         replace_in_file(curr_orca_template, 'orca_Compound_1.hess', f'{basename}_Compound_1.hess')
         orca_basename = re.split(r'\.', os.path.basename(curr_orca_template))[0]
         if not postpone_orca:
-            os.sy***REMOVED***m(f'{orca_path} {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
+            os.system(f'{orca_path} {curr_orca_template} > {orca_basename}.out 2> {orca_basename}.err')
             for f in glob.glob('cregened*tmp*'):
                 os.remove(f)
         else:
-            print(f'--postpone_orca reque***REMOVED***d. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
+            print(f'--postpone_orca requested. ORCA input files and geometries have been prepared,\nbut you will have to start orca jobs manually.\nExiting now.')
         os.chdir(init_path)
     os.chdir(init_path_top)
 #%%
@@ -679,7 +679,7 @@ def mkbasedir(path_to_xyzfile, prefix='', suffix='', ignore_existing=False):
     '''
     Creates a directory with the basename of a file
         Arguments:
-    filename (str) - name of the file to take basename f***REMOVED***
+    filename (str) - name of the file to take basename from
     suffix (str)   - modify the basename with the suffix (no predefined separator!)
     prefix (str)   - modify the basename with the prefix (no predefined separator!)
         Returns:
@@ -742,10 +742,10 @@ def concatenate(filename, list_of_files, add_line_break=False):
                 if add_line_break: file.write('\n')
     return filename
 
-def _***REMOVED***p():
+def _step():
     '''
     Despecated
-    Automatic ***REMOVED***p counter
+    Automatic step counter
     '''
     def number_generator():
         num = 1
@@ -796,7 +796,7 @@ def orca_user_confirmation():
         else:
             print("Invalid input. Please enter 'yes' or 'no'.")
     if user_input in ("no", "n"):
-        sys.exit('Stopping now because no ORCA template provided, and user reque***REMOVED***d stop')
+        sys.exit('Stopping now because no ORCA template provided, and user requested stop')
 def confirm_orca_template_exists(orca_template_file, ask_yes = True):
     while True:
         if os.path.isfile(orca_template_file):
@@ -811,10 +811,10 @@ def confirm_orca_template_exists(orca_template_file, ask_yes = True):
                 elif 'n' in confirmation:
                     sys.exit('Aborted by user (ORCA template not found)')
             elif os.path.isfile(f'{template_dir}/{os.path.basename(orca_template_file)}') and not ask_yes:
-                print(f'{orca_template_file} not found, {os.path.basename(orca_template_file)} found in***REMOVED***ad in {template_dir}. Taking the last one as template.')
+                print(f'{orca_template_file} not found, {os.path.basename(orca_template_file)} found instead in {template_dir}. Taking the last one as template.')
                 return os.path.abspath(f'{template_dir}/{os.path.basename(orca_template_file)}')
             elif not os.path.isfile(f'{template_dir}/{os.path.basename(orca_template_file)}'):
-                sys.exit(f'ORCA template sugge***REMOVED***d by user, but no template file found in current directory nor among templates. Aborting.')
+                sys.exit(f'ORCA template suggested by user, but no template file found in current directory nor among templates. Aborting.')
 #%%
 ### CATEGORY: processing functions                    
 def Williams_proc1(mol, e_dict, verbose = False):

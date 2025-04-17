@@ -38,7 +38,7 @@ New_Step
   end
 Step_End
 
-# Step 5: Optimization of forward end f***REMOVED*** pysisyphus
+# Step 5: Optimization of forward end from pysisyphus
 New_Step
   ! wB97x-3c Opt Freq
   *xyzfile 0 1 %irc_F.xyz%
@@ -49,7 +49,7 @@ New_Step
   ! wB97x-d4 def2-tzvp
 Step_End
 
-# Step 7: Optimization of backward end f***REMOVED*** pysisyphus
+# Step 7: Optimization of backward end from pysisyphus
 New_Step
   ! wB97x-3c Opt Freq
   *xyzfile 0 1 %irc_B.xyz%

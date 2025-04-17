@@ -2,10 +2,10 @@
 
 ####### STRUCTURE COMBINING #######
 import argparse, os, itertools
-f***REMOVED*** rdkit import Chem
-f***REMOVED*** rdkit.Chem import AllChem, rdMolDescriptors, Draw
-f***REMOVED*** rdkit.Chem.rdmolfiles import MolsF***REMOVED***CDXMLFile
-f***REMOVED*** collections import defaultdict
+from rdkit import Chem
+from rdkit.Chem import AllChem, rdMolDescriptors, Draw
+from rdkit.Chem.rdmolfiles import MolsFromCDXMLFile
+from collections import defaultdict
 
 def merge_molecules(mol1, mol2, bond_type=Chem.BondType.SINGLE):
     """
@@ -40,18 +40,18 @@ def merge_molecules(mol1, mol2, bond_type=Chem.BondType.SINGLE):
     # Create an editable copy of mol2
     editable_mol2 = Chem.RWMol(mol2)
 
-    # Remove the U atoms f***REMOVED*** both molecules before merging
-    editable_mol2.RemoveAtom(u2_idx)  # Remove U f***REMOVED*** mol2
-    combined.RemoveAtom(u1_idx)       # Remove U f***REMOVED*** mol1
+    # Remove the U atoms from both molecules before merging
+    editable_mol2.RemoveAtom(u2_idx)  # Remove U from mol2
+    combined.RemoveAtom(u1_idx)       # Remove U from mol1
 
-    # Calculate the offset after removal f***REMOVED*** mol1
+    # Calculate the offset after removal from mol1
     offset = combined.GetNumAtoms()
 
-    # Append atoms f***REMOVED*** mol2 to mol1 (with the adju***REMOVED***d indices f***REMOVED*** mol2)
+    # Append atoms from mol2 to mol1 (with the adjusted indices from mol2)
     for atom in editable_mol2.GetAtoms():
         combined.AddAtom(atom)
 
-    # Append bonds f***REMOVED*** mol2 to mol1 (adjusting indices by the offset)
+    # Append bonds from mol2 to mol1 (adjusting indices by the offset)
     for bond in editable_mol2.GetBonds():
         combined.AddBond(
             bond.GetBeginAtomIdx() + offset,
@@ -59,7 +59,7 @@ def merge_molecules(mol1, mol2, bond_type=Chem.BondType.SINGLE):
             bond.GetBondType()
         )
 
-    # Add a new bond connecting the adju***REMOVED***d neighbor atoms
+    # Add a new bond connecting the adjusted neighbor atoms
     combined.AddBond(new_n1_idx, new_n2_idx + offset, bond_type)
 
     return combined.GetMol()
@@ -79,7 +79,7 @@ def main():
     ### Filename parser
     parser = argparse.ArgumentParser(
                         prog='TS_pipeline - fragments combiner',
-                        description='Combines molecular fragments f***REMOVED*** two .cdxml documents thorugh U-marked attachment points',)
+                        description='Combines molecular fragments from two .cdxml documents thorugh U-marked attachment points',)
 
     parser.add_argument('filename', nargs='+', help='XYZ file to process')
     args = parser.parse_args()
@@ -88,8 +88,8 @@ def main():
         print(f'{file}\n' for file in args.filename)
         print('Please provide exactly TWO fragment files')
 
-    molecules_1 = [mol for mol in MolsF***REMOVED***CDXMLFile(args.filename[0]) if mol is not None]
-    molecules_2 = [mol for mol in MolsF***REMOVED***CDXMLFile(args.filename[1]) if mol is not None]
+    molecules_1 = [mol for mol in MolsFromCDXMLFile(args.filename[0]) if mol is not None]
+    molecules_2 = [mol for mol in MolsFromCDXMLFile(args.filename[1]) if mol is not None]
 
     smiles = []
     merged_molecules = []
@@ -107,7 +107,7 @@ def main():
                 print("Failed to merge a pair of fragments:", e)
 
     for smile in smiles:
-        mol = Chem.MolF***REMOVED***Smiles(smile)
+        mol = Chem.MolFromSmiles(smile)
         if mol is None:
             print(f"Skipping invalid SMILES: {smile}")
             continue

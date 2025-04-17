@@ -2,7 +2,7 @@
 
 import os, shutil, argparse, sys
 import ts_pipeline.core.ts_pipeline as tsp
-f***REMOVED*** ts_pipeline.config import TOOLS as tsp_tools
+from ts_pipeline.config import TOOLS as tsp_tools
 sys.stdout.reconfigure(line_buffering=True)
 
 ### Installation section
@@ -25,13 +25,13 @@ def main():
                         C-C=N-C       - imines
                         C1C=CCC=C1    - norbornadienes
                         C1=CCNC=C1    - diarylethenes''', required=True)
-    parser.add_argument('-o', '--orca-template', help='ORCA template for ***REMOVED***p 9. If empty, stops at stage 8 (pysis IRC for all TS conformers)')
+    parser.add_argument('-o', '--orca-template', help='ORCA template for step 9. If empty, stops at stage 8 (pysis IRC for all TS conformers)')
     parser.add_argument('-f', '--force-constant', default = 0.50, help='Force constant for CREST constrained sampling (default = 0.50)')
-    parser.add_argument('--triple-crest', action = 'store_true', help='THIS OPTION ALTERNATES WORKFLOW SIGNIFICANTLY. After creating initial TS guess geometry (***REMOVED***p 4)\
+    parser.add_argument('--triple-crest', action = 'store_true', help='THIS OPTION ALTERNATES WORKFLOW SIGNIFICANTLY. After creating initial TS guess geometry (step 4)\
     the pipeline runs CREST sampling for TS and for both reagent states (obtained by IRC). Then TS conformers are reoptimized, and final ensemble\
     undergoes single point ORCA DFT calculation. The final energies should be treated with Willians procedure number 3 (taking mixing entropy into account')
     parser.add_argument('--postpone-orca', action = 'store_true', help='Prepares templates and geometries for ORCA calculation, but does not run it')
-    parser.add_argument('--yes', action = 'store_true', help='Assume answering "yes" to all p***REMOVED***pts, even when working in an interactive session')
+    parser.add_argument('--yes', action = 'store_true', help='Assume answering "yes" to all prompts, even when working in an interactive session')
     args = parser.parse_args()
     
     if not args.mode:
@@ -52,7 +52,7 @@ C1=CCNC=C1    - for diarylethenes
         if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive' or not args.yes:
             tsp.orca_user_confirmation()
         else:
-            print('No ORCA template sugge***REMOVED***d, thus going until pysis reoptimization (stage 8)')
+            print('No ORCA template suggested, thus going until pysis reoptimization (stage 8)')
     for mol in mols:
     ####### 0 Detecting key TS node
         dihedral_nums=''
@@ -116,7 +116,7 @@ C1=CCNC=C1    - for diarylethenes
                     fragment_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
                     print(fragment_nums)
                 except ValueError:
-                    print(f'Reque***REMOVED***d SMILES {args.mode} not found in the molecule, exiting')
+                    print(f'Requested SMILES {args.mode} not found in the molecule, exiting')
                     sys.exit('No key TS mode provided (arg -m) or it is not recognized, exiting')
 
     ####### Saving starting dir
@@ -164,7 +164,7 @@ C1=CCNC=C1    - for diarylethenes
                                            etemp='--etemp 1500',)
 
         
-        ####### 3 Second dia***REMOVED***reomer reopt
+        ####### 3 Second diastereomer reopt
         m_opt_dir = tsp.mkbasedir(mol, prefix='03_', suffix='_xtb_scan_reopt')
         scan_reoptimized = tsp.xtb_opt(scanned, 
                                        dirname=m_opt_dir,
@@ -183,12 +183,12 @@ C1=CCNC=C1    - for diarylethenes
             case 'C-C=C-C':
                 check_dih_value = tsp.get_dihedral(TS, *dihedral_nums)
                 if abs(check_dih_value) < 60.0 or abs(check_dih_value) > 120.0:
-                    print(f'Key parameter, dihedral {dihedral_nums} = {check_dih_value}, it is too far f***REMOVED*** 90.0, starting the next molecule (or stopping)')
+                    print(f'Key parameter, dihedral {dihedral_nums} = {check_dih_value}, it is too far from 90.0, starting the next molecule (or stopping)')
                     continue
             case 'C-C=N-C':
                 check_angle_CNC = tsp.get_angle(TS, *dihedral_nums[1:])
                 if check_angle_CNC < 160.0:
-                    print(f'Key parameter, angle {dihedral_nums[1:]} = {check_angle_CNC}, it is too far f***REMOVED*** 180.0, starting the next molecule (or stopping)')
+                    print(f'Key parameter, angle {dihedral_nums[1:]} = {check_angle_CNC}, it is too far from 180.0, starting the next molecule (or stopping)')
                     continue
             case 'C1C=CCC=C1':
                 check_nbd_distances = tsp.get_distance(TS, *cyclohexadiene_nums[1::4]), tsp.get_distance(TS, *cyclohexadiene_nums[2::2])

@@ -1,4 +1,4 @@
-[build-sy***REMOVED***m]										
+[build-system]										
 requires = ["setuptools>=64", "wheel"]                                                  
 build-backend = "setuptools.build_meta"                                                 
 
@@ -11,8 +11,8 @@ readme = "README.md"
 requires-python = ">=3.10.8"                                                            
                                                                                         
 authors = [                                                                             
-  { name = "Roman Peshkov", email = "***REMOVED***an.peshkov@kemi.uu.se" },                       
-  { name = "Jorn Steen", email = "***REMOVED***n.***REMOVED***en@kemi.uu.se" }                              
+  { name = "Roman Peshkov", email = "roman.peshkov@kemi.uu.se" },                       
+  { name = "Jorn Steen", email = "jorn.steen@kemi.uu.se" }                              
 ]                                                                                       
                                                                                         
 
@@ -31,7 +31,7 @@ keywords = [
 
 classifiers = [
   "Programming Language :: Python :: 3",
-  "Operating Sy***REMOVED***m :: Linux",
+  "Operating System :: Linux",
   "Intended Audience :: Science/Research",
   "Topic :: Scientific/Engineering :: Physics",
   "Topic :: Scientific/Engineering :: Chemistry",

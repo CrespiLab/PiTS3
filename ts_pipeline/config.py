@@ -25,7 +25,7 @@ for name, user_defined in _REQUIRED_TOOLS.items():
         TOOLS[name] = shutil.which(name)
         warnings.warn(
             f"\n[ts_pipeline] Could not find user defined path for {name} '{user_defined}' in PATH. "
-            f"Found \"{name}\" in {shutil.which(name)} in***REMOVED***ad"
+            f"Found \"{name}\" in {shutil.which(name)} instead"
         )
     else:
         warnings.warn(

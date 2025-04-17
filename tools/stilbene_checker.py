@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import glob, os, sys, re
-sys.path.append('/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline/src/')
-f***REMOVED*** openbabel import pybel
-f***REMOVED*** rdkit import Chem
+sys.path.append('/proj/scgrp/users/x_rompe/TS_pipeline/src/')
+from openbabel import pybel
+from rdkit import Chem
 import TS_pipe as tsp
-prefix='/proj/scgrp/users/x_***REMOVED***pe/TS_pipeline'
+prefix='/proj/scgrp/users/x_rompe/TS_pipeline'
 
 for_fragment_detection = glob.glob(f'{prefix}/data/structures/stilbenes/C*.xyz')
 names = list(map(lambda x: re.split(r'\.',os.path.basename(x))[0], for_fragment_detection))

@@ -21,10 +21,10 @@ Adjust according to your folder structure:
 ### Global environment
 Note that xTB and CREST depend on **OMP_NUM_THREADS** global variable, which controls the number of cores available to those utilities. Adjust it accordingly.
 
-**By default**, the tool will check the accessibility of **crest**, **xtb**, **orca** and **pysis** in your environment (in PATH). If you have multiple installations/versions of these utilities, make sure the right one is in your PATH or change ts_pipe/config.py accordingly (see instructions in the file). It is especially relevant for working in a supercomputer clu***REMOVED***r environment, where you might have a module sy***REMOVED***m for utility loading.
+**By default**, the tool will check the accessibility of **crest**, **xtb**, **orca** and **pysis** in your environment (in PATH). If you have multiple installations/versions of these utilities, make sure the right one is in your PATH or change ts_pipe/config.py accordingly (see instructions in the file). It is especially relevant for working in a supercomputer cluster environment, where you might have a module system for utility loading.
 
 ### Programmes required
-These programmes need to be callable f***REMOVED*** the command-line (i.e. should be available in your PATH).
+These programmes need to be callable from the command-line (i.e. should be available in your PATH).
 If not: adjust config.py and add paths to programmes.
 - OpenBabel
 - xTB
@@ -33,7 +33,7 @@ If not: adjust config.py and add paths to programmes.
 
 
 
-### Clu***REMOVED***r
+### Cluster
 
 
 

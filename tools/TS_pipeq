@@ -17,22 +17,22 @@ check_run=0
 
 usage () { 
     echo "  TS_pipe launcher"
-    echo "  Uppsala University, Kemi-Angst***REMOVED***, group of Stefano Crespi"
+    echo "  Uppsala University, Kemi-Angstrom, group of Stefano Crespi"
     echo 
     echo "    Usage:"
     echo "  -t    job time [h]"
     echo "  -a    account name ( smth )"
     echo "  -n    number of cores/threads (1..32)"
     echo "  -m    TS mode (SMILES string with reference fragment)"
-    echo "  -o    path to orca template file for the last ***REMOVED***p of pipeline"
-    echo "  --postpone-orca    path to orca template file for the last ***REMOVED***p of pipeline"
-    echo "  --triple-crest    path to orca template file for the last ***REMOVED***p of pipeline"
+    echo "  -o    path to orca template file for the last step of pipeline"
+    echo "  --postpone-orca    path to orca template file for the last step of pipeline"
+    echo "  --triple-crest    path to orca template file for the last step of pipeline"
     echo "  -f    force constant for CREST constrained sampling (default = 0.50)"
     echo "  -k    keep .SLURM script"
     echo "  -d    dry run (keep .SLURM, but no submission)"
     echo
     echo "  Defaults: -t 23, -a smth, -n 8"
-    echo "  Memory is calculated an n*3 GB, except if n=32 then mem=32*n-2 (2 GB reserved for sy***REMOVED***m)"
+    echo "  Memory is calculated an n*3 GB, except if n=32 then mem=32*n-2 (2 GB reserved for system)"
     echo
 }
 
