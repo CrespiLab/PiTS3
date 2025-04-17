@@ -1,9 +1,11 @@
 #!/bin/bash
-source ***REMOVED***e
-***REMOVED***
+
+## Insert path to your venv environment
+source 
 
 time_hours=23
-account_name="***REMOVED***"
+## Adjust to your account name
+account_name="SLURM ACCOUNT NAME"
 number_of_cores=8
 memory=24
 reservation=''
@@ -19,7 +21,7 @@ usage () {
     echo 
     echo "    Usage:"
     echo "  -t    job time [h]"
-    echo "  -a    account name ( ***REMOVED***|***REMOVED***|***REMOVED*** )"
+    echo "  -a    account name ( smth )"
     echo "  -n    number of cores/threads (1..32)"
     echo "  -m    TS mode (SMILES string with reference fragment)"
     echo "  -o    path to orca template file for the last ***REMOVED***p of pipeline"
@@ -29,7 +31,7 @@ usage () {
     echo "  -k    keep .SLURM script"
     echo "  -d    dry run (keep .SLURM, but no submission)"
     echo
-    echo "  Defaults: -t 23, -a ***REMOVED***, -n 8"
+    echo "  Defaults: -t 23, -a smth, -n 8"
     echo "  Memory is calculated an n*3 GB, except if n=32 then mem=32*n-2 (2 GB reserved for sy***REMOVED***m)"
     echo
 }
@@ -52,14 +54,9 @@ while true; do
       ;;
     -a)
       case "$2" in
-        ***REMOVED***)
-          account_name="***REMOVED***"
-          ;;
-        ***REMOVED***)
-          account_name="***REMOVED***"
-          ;;
-        ***REMOVED***)
-          account_name="***REMOVED***"
+## Adjust to your account name(s)
+        smth)
+          account_name="SLURM ACCOUNT NAME"
           ;;
         *)
           echo "Unknown account"
@@ -140,8 +137,6 @@ for file in $@;
 #SBATCH --partition=tetralith ##production queue
 #SBATCH -A ` echo $account_name `
 #SBATCH -o %s-%j.log
-#SBATCH --mail-user=***REMOVED***an.peshkov@kemi.uu.se
-***REMOVED***
 `echo $reservation`
 
 module load ORCA/6.0.1

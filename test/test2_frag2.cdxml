@@ -3,9 +3,9 @@
 <CDXML
  CreationProgram="ChemDraw 21.0.0.28"
  Name="test2_frag2.cdxml"
- BoundingBox="146.76 121.56 160.44 132.10"
+ BoundingBox="126.87 121.56 160.44 149.25"
  WindowPosition="0 0"
- WindowSize="1073741824 -2147483648"
+ WindowSize="1073741824 0"
  WindowIsZoomed="yes"
  FractionalWidths="yes"
  InterpretChemically="yes"
@@ -86,7 +86,7 @@
 </colortable><fonttable>
 <font id="3" charset="iso-8859-1" name="Arial"/>
 </fonttable><page
- id="91"
+ id="109"
  BoundingBox="0 0 2616 3849"
  HeaderPosition="36"
  FooterPosition="36"
@@ -95,17 +95,17 @@
  WidthPages="5"
 ><fragment
  id="89"
- BoundingBox="146.76 121.56 160.44 132.10"
- Z="30"
+ BoundingBox="126.87 121.56 160.44 149.25"
+ Z="8"
 ><n
  id="80"
  p="147.01 131.67"
- Z="21"
+ Z="5"
  AS="N"
 /><n
  id="86"
  p="156.83 126"
- Z="27"
+ Z="6"
  Element="92"
  NumHydrogens="0"
  NeedsClean="yes"
@@ -114,10 +114,77 @@
  p="153.22 129.90"
  BoundingBox="153.22 121.56 160.44 130"
  LabelJustification="Left"
-><s font="3" size="10" color="0" face="96">U</s></t></n><b
+><s font="3" size="10" color="0" face="96">U</s></t></n><n
+ id="92"
+ p="137.19 126"
+ Z="9"
+ AS="N"
+/><n
+ id="94"
+ p="127.37 131.67"
+ Z="11"
+ AS="N"
+/><n
+ id="96"
+ p="127.37 143.01"
+ Z="13"
+ AS="N"
+/><n
+ id="98"
+ p="137.19 148.68"
+ Z="15"
+ AS="N"
+/><n
+ id="100"
+ p="147.01 143.01"
+ Z="17"
+ AS="N"
+/><b
  id="87"
- Z="28"
+ Z="7"
  B="80"
  E="86"
+ BS="N"
+/><b
+ id="102"
+ Z="19"
+ B="80"
+ E="92"
+ Order="2"
+ BS="N"
+ BondCircularOrdering="107 87 0 103"
+/><b
+ id="103"
+ Z="20"
+ B="92"
+ E="94"
+ BS="N"
+/><b
+ id="104"
+ Z="21"
+ B="94"
+ E="96"
+ Order="2"
+ BS="N"
+ BondCircularOrdering="103 0 0 105"
+/><b
+ id="105"
+ Z="22"
+ B="96"
+ E="98"
+ BS="N"
+/><b
+ id="106"
+ Z="23"
+ B="98"
+ E="100"
+ Order="2"
+ BS="N"
+ BondCircularOrdering="105 0 0 107"
+/><b
+ id="107"
+ Z="24"
+ B="100"
+ E="80"
  BS="N"
 /></fragment></page></CDXML>

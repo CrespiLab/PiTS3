@@ -34,6 +34,7 @@ def main():
     parser.add_argument('-d', '--dump', nargs='?', help='Filename for json dump of final dictionary', 
                         default = f'{os.path.basename(os.getcwd())}')
     parser.add_argument('--individual', action = 'store_true', help='Write individual json dumps for each molecule in***REMOVED***ad on accumulated one')
+    parser.add_argument('--no-pysis', action = 'store_false', help='Collect ORCA (DFT) data only')
     parser.add_argument('-v', '--verbose', action = 'store_true', help='Verbose printing for debug')
     args = parser.parse_args()
     
@@ -88,28 +89,29 @@ def main():
                 case _:
                     sys.exit('No key TS mode provided (arg -m) or it is not recognized, exiting')
     ####### 1 Checking initial TS geometry        
-            first_ts = f'{name}/4_{name}_pysis/ts_final_geometry.xyz'
-            match args.mode:
-                case 'C-C=C-C':
-                    dih_value = tsp.get_dihedral(first_ts, *dihedral_nums)
-                    data_collector[name]['TS guess key parameter'] = 'dihedral C-C=C-C'
-                    data_collector[name]['TS guess key value'] = dih_value
-                case 'C-C=N-C':
-                    angle_value = tsp.get_angle(first_ts, *dihedral_nums[1:])
-                    data_collector[name]['TS guess key parameter'] = 'angle C=N-C'
-                    data_collector[name]['TS guess key value'] = angle_value
-                case 'Greenfield C-C=N-C':
-                    angle_value = tsp.get_angle(first_ts, *dihedral_nums[1:])
-                    data_collector[name]['TS guess key parameter'] = 'angle C=N-C'
-                    data_collector[name]['TS guess key value'] = angle_value
-                case 'C1C=CCC=C1':
-                    distances = [tsp.get_distance(first_ts, *cyclohexadiene_nums[1::4]), tsp.get_distance(first_ts, *cyclohexadiene_nums[2::2])]
-                    data_collector[name]['TS guess key parameter'] = 'distances C-C'
-                    data_collector[name]['TS guess key value'] = distances
-                case 'C1=CCNC=C1':
-                    distance = tsp.get_distance(first_ts, *adae_chain_nums[2:4])
-                    data_collector[name]['TS guess key parameter'] = 'distances N-C'
-                    data_collector[name]['TS guess key value'] = distance
+            if args.no_pysis:
+                first_ts = f'{name}/4_{name}_pysis/ts_final_geometry.xyz'
+                match args.mode:
+                    case 'C-C=C-C':
+                        dih_value = tsp.get_dihedral(first_ts, *dihedral_nums)
+                        data_collector[name]['TS guess key parameter'] = 'dihedral C-C=C-C'
+                        data_collector[name]['TS guess key value'] = dih_value
+                    case 'C-C=N-C':
+                        angle_value = tsp.get_angle(first_ts, *dihedral_nums[1:])
+                        data_collector[name]['TS guess key parameter'] = 'angle C=N-C'
+                        data_collector[name]['TS guess key value'] = angle_value
+                    case 'Greenfield C-C=N-C':
+                        angle_value = tsp.get_angle(first_ts, *dihedral_nums[1:])
+                        data_collector[name]['TS guess key parameter'] = 'angle C=N-C'
+                        data_collector[name]['TS guess key value'] = angle_value
+                    case 'C1C=CCC=C1':
+                        distances = [tsp.get_distance(first_ts, *cyclohexadiene_nums[1::4]), tsp.get_distance(first_ts, *cyclohexadiene_nums[2::2])]
+                        data_collector[name]['TS guess key parameter'] = 'distances C-C'
+                        data_collector[name]['TS guess key value'] = distances
+                    case 'C1=CCNC=C1':
+                        distance = tsp.get_distance(first_ts, *adae_chain_nums[2:4])
+                        data_collector[name]['TS guess key parameter'] = 'distances N-C'
+                        data_collector[name]['TS guess key value'] = distance
 
     ####### 2 Checking amount of conformers
             data_collector[name]['pysis input conformers number'] = len(glob.glob(f'{name}/8_*/cregened_conformers*[0-9]'))
@@ -316,7 +318,7 @@ def main():
             individual_dict[key] = value
             with open(f'{key}_energies.json', 'w') as json_file:
                 json.dump(individual_dict, json_file, indent=4)
-        print(f'Energies for {key} are dumped in {key}_energies.json')
+            print(f'Energies for {key} are dumped in {key}_energies.json')
     ######## 5 Williams 
     Gs = {}
     for mol_name, e_dict in energies_dict.items():
@@ -325,11 +327,17 @@ def main():
         except ValueError as e:
             print(e) 
     if args.verbose: print(*[f'{name: <15} {Geff: <10.2f}' for name, Geff in Gs.items()], sep='\n')
-    print(f"Final Williams-treated Geff's are dumped in {args.dump}_Geffs.json")
-    with open(f'{args.dump}_Geffs.json', 'w') as json_file:
-        json.dump(Gs, json_file, indent=4)
-    
-
+    if args.individual == False:
+        with open(f'{args.dump}_Geffs.json', 'w') as json_file:
+            json.dump(Gs, json_file, indent=4)
+            print(f"Final Williams-treated Geff's are dumped in {args.dump}_Geffs.json")
+    else:
+        for key, value in Gs.items():
+            individual_dict = {}
+            individual_dict[key] = value
+            with open(f'{key}_Geffs.json', 'w') as json_file:
+                json.dump(individual_dict, json_file, indent=4)
+            print(f"Final Williams-treated Geff's for {key} are dumped in {key}_Geffs.json")
     
 if __name__== '__main__':
     main()

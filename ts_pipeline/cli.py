@@ -25,12 +25,13 @@ def main():
                         C-C=N-C       - imines
                         C1C=CCC=C1    - norbornadienes
                         C1=CCNC=C1    - diarylethenes''', required=True)
-    parser.add_argument('-o', '--orca_template', help='ORCA template for ***REMOVED***p 9. If empty, stops at stage 8 (pysis IRC for all TS conformers)')
-    parser.add_argument('-f', '--force_constant', default = 0.50, help='Force constant for CREST constrained sampling (default = 0.50)')
+    parser.add_argument('-o', '--orca-template', help='ORCA template for ***REMOVED***p 9. If empty, stops at stage 8 (pysis IRC for all TS conformers)')
+    parser.add_argument('-f', '--force-constant', default = 0.50, help='Force constant for CREST constrained sampling (default = 0.50)')
     parser.add_argument('--triple-crest', action = 'store_true', help='THIS OPTION ALTERNATES WORKFLOW SIGNIFICANTLY. After creating initial TS guess geometry (***REMOVED***p 4)\
     the pipeline runs CREST sampling for TS and for both reagent states (obtained by IRC). Then TS conformers are reoptimized, and final ensemble\
     undergoes single point ORCA DFT calculation. The final energies should be treated with Willians procedure number 3 (taking mixing entropy into account')
     parser.add_argument('--postpone-orca', action = 'store_true', help='Prepares templates and geometries for ORCA calculation, but does not run it')
+    parser.add_argument('--yes', action = 'store_true', help='Assume answering "yes" to all p***REMOVED***pts, even when working in an interactive session')
     args = parser.parse_args()
     
     if not args.mode:
@@ -43,12 +44,12 @@ C1=CCNC=C1    - for diarylethenes
     mols = args.filename
     mols = list(map(os.path.abspath, mols))
     if args.orca_template:
-        if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive':
+        if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive' or not args.yes:
             args.orca_template = tsp.confirm_orca_template_exists(args.orca_template, ask_yes = True)
         else:
             args.orca_template = tsp.confirm_orca_template_exists(args.orca_template, ask_yes = False)
     else:
-        if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive':
+        if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive' or not args.yes:
             tsp.orca_user_confirmation()
         else:
             print('No ORCA template sugge***REMOVED***d, thus going until pysis reoptimization (stage 8)')
