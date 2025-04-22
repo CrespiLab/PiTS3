@@ -44,12 +44,12 @@ C1=CCNC=C1    - for diarylethenes
     mols = args.filename
     mols = list(map(os.path.abspath, mols))
     if args.orca_template:
-        if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive' or not args.yes:
+        if (not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive') and not args.yes:
             args.orca_template = tsp.confirm_orca_template_exists(args.orca_template, ask_yes = True)
         else:
             args.orca_template = tsp.confirm_orca_template_exists(args.orca_template, ask_yes = False)
     else:
-        if not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive' or not args.yes:
+        if (not os.environ.get('SLURM_JOB_GID') or os.environ.get('SLURM_JOB_NAME') == 'interactive') and not args.yes:
             tsp.orca_user_confirmation()
         else:
             print('No ORCA template suggested, thus going until pysis reoptimization (stage 8)')

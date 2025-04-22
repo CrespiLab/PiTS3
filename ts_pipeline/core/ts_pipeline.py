@@ -825,8 +825,8 @@ def Williams_proc1(mol, e_dict, verbose = False):
     min_energy = min(min(e_dict["Metastable energies"]), min(e_dict["TS energies"]))
     M_Es = [(M_E - min_energy) * hartree for M_E in e_dict['Metastable energies']]
     TS_Es = [(TS_E - min_energy) * hartree for TS_E in e_dict['TS energies']]
-    M_BWs = [math.exp(-1000*E/ (R*T)) for E in M_Es]
-    TS_BWs = [math.exp(-1000*E/ (R*T)) for E in TS_Es]
+    M_BWs = [math.exp(-1000*G/ (R*T)) for G in M_Es]
+    TS_BWs = [math.exp(-1000*G/ (R*T)) for G in TS_Es]
     TS_BWs_sum = sum(TS_BWs)
     khi_zero = max(M_BWs) / sum(M_BWs)
     BWeff = khi_zero * TS_BWs_sum
@@ -839,7 +839,38 @@ def Williams_proc1(mol, e_dict, verbose = False):
               for M_Eh, TS_Eh, M_E, TS_E, M_BW, TS_BW 
               in zip(e_dict['Metastable energies'], e_dict["TS energies"], M_Es, TS_Es, M_BWs, TS_BWs)], sep='\n')
         print(f'-------------------|'*3)
-        print(f'TS BWs sum: {TS_BWs_sum:.3e}, χ0 = {khi_zero:.3e}, "BWeff" = {TS_BWs_sum * khi_zero}')
+        print(f'Q(TS): {TS_BWs_sum:.3e}, χ0 = {khi_zero:.3e}, χ0 * Q(TS) = {TS_BWs_sum * khi_zero:.3e}')
+        print(f'Geff({mol}) = {Geff:.3f} kJ/mol')
+    return Geff
+def Williams_proc3(mol, e_dict, verbose = False):
+#    R = 8.31446261815324
+    R = 8.314
+    T = 298.15
+    hartree = 2625.4996394799 # [kJ/mol]
+    min_energy = min(min(e_dict["Metastable energies"]), min(e_dict["TS energies"]))
+    M_Gs = [(M_G - min_energy) * hartree for M_G in e_dict['Metastable energies']]
+    TS_Gs = [(TS_G - min_energy) * hartree for TS_G in e_dict['TS energies']]
+    M_BWs = [math.exp(-1000*G/ (R*T)) for G in M_Gs]
+    TS_BWs = [math.exp(-1000*G/ (R*T)) for G in TS_Gs]
+    Q_TS = sum(TS_BWs)
+    Q_M = sum(M_BWs)
+    Geff = R * T * math.log(Q_M / Q_TS) / 1000
+    if verbose:
+        print(f'\nWilliams (10.1002/poc.4312) procedure 3 for {mol}\n'+f'-------------------|'*3)
+        print(f'   Gibbs [hartree] | Rel.Gibbs[kJ/mol] | Boltzmann weights |')
+        print(f'   Mi        TSi   |'*3)
+        print(*[f'{M_Gh: <10.4f}{TS_Gh: <9.4f}|{M_G: ^10.1f}{TS_G: ^9.1f}|{M_BW: <9.3e}|{TS_BW: <9.3e}|' 
+              for M_Gh, TS_Gh, M_G, TS_G, M_BW, TS_BW 
+              in zip(e_dict['Metastable energies'], e_dict["TS energies"], M_Gs, TS_Gs, M_BWs, TS_BWs)], sep='\n')
+        print(f'-------------------|'*3)
+        Gavg_M = R * T * sum([(math.exp(-1000 * G / ( R * T )) / Q_M ) * 1000 * G / ( R * T ) for G in M_Gs])
+        Smix_M = R * T * sum([ (math.exp(-1000 * G / (R * T)) / Q_M ) * math.log(math.exp(-1000 * G / (R * T)) / Q_M) for G in M_Gs])
+        Geff_M = Gavg_M + Smix_M
+        print(f'Q(M)  = {Q_M: .3e}, Gavg(M)  = {Gavg_M: .3e}, ΔSmix(M)  = {Smix_M: .3e}, Geff(M)  = {Geff_M: .3e}', sep='')
+        Gavg_TS = R * T * sum([(math.exp(-1000 * G / ( R * T )) / Q_TS ) * 1000 * G / ( R * T ) for G in TS_Gs])
+        Smix_TS = R * T * sum([ (math.exp(-1000 * G / (R * T)) / Q_TS ) * math.log(math.exp(-1000 * G / (R * T)) / Q_TS) for G in TS_Gs])
+        Geff_TS = Gavg_TS + Smix_TS
+        print(f'Q(TS) = {Q_TS: .3e}, Gavg(TS) = {Gavg_TS: .3e}, ΔSmix(TS) = {Smix_TS: .3e}, Geff(TS) = {Geff_TS: .3e}', sep='')
         print(f'Geff({mol}) = {Geff:.3f} kJ/mol')
     return Geff
 #######################################################################
