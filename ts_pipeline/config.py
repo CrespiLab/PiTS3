@@ -9,7 +9,7 @@ import shutil, sys, warnings, pprint
 # Tools to check (name: default fallback)
 _REQUIRED_TOOLS = {
     "xtb"  : "xtb",
-    "orca" : "orca.run",
+    "orca" : "orca",
     "pysis": "pysis",
     "crest": "crest"
 }
