@@ -1,5 +1,5 @@
 # PiTS<sup>3</sup>
-**March 31st, 2025**
+**April 23<sup>rd</sup>, 2025**
 
  (Semi)automatic pipeline for transition state (TS) search in molecular photoswitches.
 
