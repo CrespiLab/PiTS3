@@ -27,9 +27,6 @@ def main():
                         C1=CCNC=C1    - diarylethenes''', required=True)
     parser.add_argument('-o', '--orca-template', help='ORCA template for step 9. If empty, stops at stage 8 (pysis IRC for all TS conformers)')
     parser.add_argument('-f', '--force-constant', default = 0.50, help='Force constant for CREST constrained sampling (default = 0.50)')
-    parser.add_argument('--triple-crest', action = 'store_true', help='THIS OPTION ALTERNATES WORKFLOW SIGNIFICANTLY. After creating initial TS guess geometry (step 4)\
-    the pipeline runs CREST sampling for TS and for both reagent states (obtained by IRC). Then TS conformers are reoptimized, and final ensemble\
-    undergoes single point ORCA DFT calculation. The final energies should be treated with Willians procedure number 3 (taking mixing entropy into account')
     parser.add_argument('--postpone-orca', action = 'store_true', help='Prepares templates and geometries for ORCA calculation, but does not run it')
     parser.add_argument('--yes', action = 'store_true', help='Assume answering "yes" to all prompts, even when working in an interactive session')
     args = parser.parse_args()
@@ -214,84 +211,43 @@ C1=CCNC=C1    - for diarylethenes
                 elif check_adae_distance < 1.7:
                     print(f'Key parameter, distance {distance1} = {check_adae_distance}, it is too short and close to closed form, starting the next molecule (or stopping)')
                     continue
-        if not args.triple_crest:
-            ####### 5 Constrained sampling with CREST
-            for_TS_sampling = tsp.mkbasedir(mol, prefix='05_', suffix='_TS_sampling', )
-            TS_conformers = tsp.crest_constrained_sampling(TS,
-                                                           dirname=for_TS_sampling, 
-                                                           constrain_atoms=constraint,
-                                                           constrain_dihedral=dihedral_nums,
-                                                           force_constant = args.force_constant,
-                                                           optlev='--extreme',)
-            ######################################################  dlen='--len x3', mdlen='--mdlen x3')
-                                                          # solvent='--alpb acetonitrile',
-            ####### 6 Pysis to reoptimize all TS conformers
-            for_pysis_TS_reopt = tsp.mkbasedir(mol, prefix='06_', suffix='_pysis_TS_reopt')
-            reoptimized_TSes = tsp.pysis_ts_reopt(f'{ts_pipe_dir}/templates/TS_reopt.yaml', 
-                                                  TS_conformers, 
-                                                  dirname = for_pysis_TS_reopt,
-                                                  concat_breaks=True)
-            
-            ####### 7 CREGEN of reoptimized TSes
-            for_cregen = tsp.mkbasedir(mol, prefix = '7_', suffix = '_optmized_TS_cregen')
-            cregened_ensemble = tsp.cregen(reoptimized_TSes, dirname = for_cregen)
-            
-            ####### 8 Pysis IRC
-            for_pysis_irc = tsp.mkbasedir(mol, prefix = '8_', suffix = '_filtered_TS_irc')
-            cregened_ensemble = shutil.copy(cregened_ensemble, f'{for_pysis_irc}/cregened_conformers.xyz')
-            ircs = tsp.pysis_ts_irc(f'{ts_pipe_dir}/templates/TS_reopt_irc.yaml',
-                                      xyz = cregened_ensemble,
-                                      dirname = for_pysis_irc,)
+        ####### 5 Constrained sampling with CREST
+        for_TS_sampling = tsp.mkbasedir(mol, prefix='05_', suffix='_TS_sampling', )
+        TS_conformers = tsp.crest_constrained_sampling(TS,
+                                                       dirname=for_TS_sampling, 
+                                                       constrain_atoms=constraint,
+                                                       constrain_dihedral=dihedral_nums,
+                                                       force_constant = args.force_constant,
+                                                       optlev='--extreme',)
+        ######################################################  dlen='--len x3', mdlen='--mdlen x3')
+                                                      # solvent='--alpb acetonitrile',
+        ####### 6 Pysis to reoptimize all TS conformers
+        for_pysis_TS_reopt = tsp.mkbasedir(mol, prefix='06_', suffix='_pysis_TS_reopt')
+        reoptimized_TSes = tsp.pysis_ts_reopt(f'{ts_pipe_dir}/templates/TS_reopt.yaml', 
+                                              TS_conformers, 
+                                              dirname = for_pysis_TS_reopt,
+                                              concat_breaks=True)
+        
+        ####### 7 CREGEN of reoptimized TSes
+        for_cregen = tsp.mkbasedir(mol, prefix = '7_', suffix = '_optmized_TS_cregen')
+        cregened_ensemble = tsp.cregen(reoptimized_TSes, dirname = for_cregen)
+        
+        ####### 8 Pysis IRC
+        for_pysis_irc = tsp.mkbasedir(mol, prefix = '8_', suffix = '_filtered_TS_irc')
+        cregened_ensemble = shutil.copy(cregened_ensemble, f'{for_pysis_irc}/cregened_conformers.xyz')
+        ircs = tsp.pysis_ts_irc(f'{ts_pipe_dir}/templates/TS_reopt_irc.yaml',
+                                  xyz = cregened_ensemble,
+                                  dirname = for_pysis_irc,)
 
-            ####### 9 ORCA wB97x-3c Hess + TSOpt + IRC
-            if args.orca_template:
-                for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
-                tsp.orca_three_points(ircs,
-                                      orca_template = args.orca_template,
-                                      dirname = for_orca,
-                                      postpone_orca = args.postpone_orca)
-            else:
-                print(f'Since no ORCA template provided, stopping with the current molecule now.')
+        ####### 9 ORCA wB97x-3c Hess + TSOpt + IRC
+        if args.orca_template:
+            for_orca = tsp.mkbasedir(mol, prefix = '9_', suffix = '_orca')
+            tsp.orca_three_points(ircs,
+                                  orca_template = args.orca_template,
+                                  dirname = for_orca,
+                                  postpone_orca = args.postpone_orca)
         else:
-            ####### 5 IRC with initial TS guess
-            for_top_irc = tsp.mkbasedir(mol, prefix='05_', suffix='_IRC', )
-            top_irc = tsp.pysis_ts_irc(f'{ts_pipe_dir}/templates/TS_reopt_irc.yaml',
-                                       xyz = TS,
-                                       dirname = for_top_irc,)
-            ####### 6-8 CREST sampling for TS, reactant and product
-            for_TS_sampling = tsp.mkbasedir(mol, prefix='06_', suffix='_TS_sampling', )
-            TS_conformers = tsp.crest_constrained_sampling(top_irc['conformers']['ts_final_geometry_0_reopt.xyz']['TS'],
-                                                           dirname=for_TS_sampling, 
-                                                           constrain_atoms=constraint,
-                                                           constrain_dihedral=dihedral_nums,
-                                                           force_constant = args.force_constant,
-                                                           optlev='--extreme',)
-            for_RS1_sampling = tsp.mkbasedir(mol, prefix='07_', suffix='_RS1_sampling', )
-            RS1_conformers = tsp.crest_simple_sampling(top_irc['conformers']['ts_final_geometry_0_reopt.xyz']['forward'],
-                                                      dirname=for_RS1_sampling, 
-                                                      optlev='--extreme',)
-            
-            for_RS2_sampling = tsp.mkbasedir(mol, prefix='08_', suffix='_RS2_sampling', )
-            RS2_conformers = tsp.crest_simple_sampling(top_irc['conformers']['ts_final_geometry_0_reopt.xyz']['backward'],
-                                                       dirname=for_RS2_sampling, 
-                                                       optlev='--extreme',) 
-            ####### 9-11 ORCA single points for all structures
-            for_TS_SPs = tsp.mkbasedir(mol, prefix='09_', suffix='_TS_single_points', )
-            TS_SPs = tsp.orca_multixyz(TS_conformers,
-                                       orca_template = args.orca_template,
-                                       dirname = for_TS_SPs,
-                                       postpone_orca = args.postpone_orca) 
-            for_RS1_SPs = tsp.mkbasedir(mol, prefix='10_', suffix='_RS1_single_points', )
-            RS1_SPs = tsp.orca_multixyz(RS1_conformers,
-                                       orca_template = args.orca_template,
-                                       dirname = for_RS1_SPs,
-                                       postpone_orca = args.postpone_orca) 
-            for_RS2_SPs = tsp.mkbasedir(mol, prefix='11_', suffix='_RS2_single_points', )
-            TS_SPs = tsp.orca_multixyz(RS2_conformers,
-                                       orca_template = args.orca_template,
-                                       dirname = for_RS2_SPs,
-                                       postpone_orca = args.postpone_orca) 
-            
+            print(f'Since no ORCA template provided, stopping with the current molecule now.')
             
         os.chdir(start_dir)
 
