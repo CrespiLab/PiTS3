@@ -90,7 +90,7 @@ def main():
                     sys.exit('No key TS mode provided (arg -m) or it is not recognized, exiting')
     ####### 1 Checking initial TS geometry        
             if args.no_pysis:
-                first_ts = f'{name}/4_{name}_pysis/ts_final_geometry.xyz'
+                first_ts = f'{name}/04_{name}_pysis/ts_final_geometry.xyz'
                 match args.mode:
                     case 'C-C=C-C':
                         dih_value = tsp.get_dihedral(first_ts, *dihedral_nums)
@@ -114,8 +114,8 @@ def main():
                         data_collector[name]['TS guess key value'] = distance
 
     ####### 2 Checking amount of conformers
-            data_collector[name]['pysis input conformers number'] = len(glob.glob(f'{name}/8_*/cregened_conformers*[0-9]'))
-            data_collector[name]['pysis output conformers'] = glob.glob(f'{name}/8_*/cregened_conformers*[0-9]/ts_final_geometry.xyz')
+            data_collector[name]['pysis input conformers number'] = len(glob.glob(f'{name}/08_*/cregened_conformers*[0-9]'))
+            data_collector[name]['pysis output conformers'] = glob.glob(f'{name}/08_*/cregened_conformers*[0-9]/ts_final_geometry.xyz')
             data_collector[name]['pysis output conformers number'] = len(data_collector[name]['pysis output conformers'])
             data_collector[name]['pysis conformers properties'] = {}
             for file in data_collector[name]['pysis output conformers']:
@@ -139,8 +139,8 @@ def main():
                         data_collector[name]['pysis conformers properties'][curr_pysis_conf]['TS conformer key value'] = distance
                     
     ####### 3 Checking orca generated data
-            data_collector[name]['orca input conformers number'] = len(glob.glob(f'{name}/9_*/cregened_conformers*reopt'))
-            data_collector[name]['orca output conformers'] = glob.glob(f'{name}/9_*/cregened_conformers*reopt')
+            data_collector[name]['orca input conformers number'] = len(glob.glob(f'{name}/09_*/cregened_conformers*reopt'))
+            data_collector[name]['orca output conformers'] = glob.glob(f'{name}/09_*/cregened_conformers*reopt')
             data_collector[name]['orca output conformers number'] = len(data_collector[name]['orca output conformers'])
             data_collector[name]['orca conformers properties'] = {}
             for dir in data_collector[name]['orca output conformers']:
