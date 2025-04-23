@@ -260,6 +260,9 @@ C1=CCNC=C1    - for diarylethenes
                                        dirname = for_top_irc,)
             ####### 6-8 CREST sampling for TS, reactant and product
             for_TS_sampling = tsp.mkbasedir(mol, prefix='06_', suffix='_TS_sampling', )
+            # Deleting extra constraint over dihedral for imines
+            if args.mode == 'C-C=N-C': 
+                dihedral_nums = ''
             TS_conformers = tsp.crest_constrained_sampling(top_irc['conformers']['ts_final_geometry_0_reopt.xyz']['TS'],
                                                            dirname=for_TS_sampling, 
                                                            constrain_atoms=constraint,
