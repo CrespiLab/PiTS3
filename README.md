@@ -33,10 +33,33 @@ If not: adjust config.py and add paths to programmes.
 
 ### Cluster
 
+## TEST
+We provide a set of test examples. These can be run in the test folder using the provided bash script. 
+```
+(PiTS3.venv) /PiTS3$ cd test
+(PiTS3.venv) /PiTS3/test$ ./test.sh
+```
 
-# *TBD*
+# Instructions
 
-##TEST
+## Tools
+- tspipe
+- ts_data_collector
+- fragments_combiner
+- cdxml_to_xyz
+
+### Fragments Combiner Tool (fragments_combiner)
+
+## TS Mode Selection
+The tool
+
+## Run
+###
+
+### Local (needs to be updated)
+main.py *.xyz | tee output.log
+
+## TEST
 ```
 ../../../src/fragments_combiner.py nbd_*
 
@@ -46,14 +69,7 @@ If not: adjust config.py and add paths to programmes.
 
 ```
 
-## Instructions
-### Fragments Combiner Tool
-
-### TS Mode Selection
-The tool 
-
-## RUN
-### Local
-main.py *.xyz | tee output.log
 
 
+
+ 
