@@ -12,6 +12,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-0279-4903"
 title: "PiTS3"
 version: 1.0.0
-doi: 
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.15270420
 date-released: 
 url: "https://github.com/CrespiLab/PiTS3"
