@@ -33,7 +33,7 @@ If not: adjust config.py and add paths to programmes.
 
 ### Cluster
 
-## TEST
+## Test run
 We provide a set of test examples. These can be run in the test folder using the provided bash script. 
 ```
 (PiTS3.venv) /PiTS3$ cd test
@@ -41,8 +41,13 @@ We provide a set of test examples. These can be run in the test folder using the
 ```
 
 # Instructions
+## How to Run (needs to be updated)
+Example for stilbene:
+```
+tspipe C12H9NS.xyz -m 'C1C=CCC=C1' | tee output.log
+```
 
-## Tools
+## List of Tools
 - tspipe
 - ts_data_collector
 - fragments_combiner
@@ -51,24 +56,6 @@ We provide a set of test examples. These can be run in the test folder using the
 ### Fragments Combiner Tool (fragments_combiner)
 
 ## TS Mode Selection
-The tool
-
-## Run
-###
-
-### Local (needs to be updated)
-main.py *.xyz | tee output.log
-
-## TEST
-```
-../../../src/fragments_combiner.py nbd_*
-
-../../../main.py C12H9NS.xyz
-../../../main.py C12H9NS.xyz -m "TSModeFragment"
-../../../main.py C12H9NS.xyz -m 'C1C=CCC=C1'
-
-```
-
 
 
 
