@@ -28,6 +28,7 @@ def main():
     parser.add_argument('dirname', nargs='*', help='Directory(-ies) to scrape data from')
     parser.add_argument('-m', '--mode', nargs='?', help='''TS mode (coordinate). Available options:
                         C-C=C-C       - stilbenes;
+                        C-C=C-C=O       - "oxindole"-type;
                         C-C=N-C       - imines;
                         C1C=CCC=C1    - norbornadienes;
                         C1=CCNC=C1    - diarylethenes''', required=True)
@@ -61,6 +62,9 @@ def main():
             match args.mode:
                 case 'C-C=C-C':
                     dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol_path, args.mode, sanitize = False)))
+                    data_collector[name]['key parameter atoms'] = dihedral_nums
+                case 'C-C=C-C=O':
+                    dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol_path, args.mode, sanitize = False)))[0:4]
                     data_collector[name]['key parameter atoms'] = dihedral_nums
                 case 'C-C=N-C':
                     dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol_path, args.mode, sanitize = False)))
@@ -96,6 +100,10 @@ def main():
                         dih_value = tsp.get_dihedral(first_ts, *dihedral_nums)
                         data_collector[name]['TS guess key parameter'] = 'dihedral C-C=C-C'
                         data_collector[name]['TS guess key value'] = dih_value
+                    case 'C-C=C-C=O':
+                        dih_value = tsp.get_dihedral(first_ts, *dihedral_nums)
+                        data_collector[name]['TS guess key parameter'] = 'dihedral C-C=C-C(=O)'
+                        data_collector[name]['TS guess key value'] = dih_value
                     case 'C-C=N-C':
                         angle_value = tsp.get_angle(first_ts, *dihedral_nums[1:])
                         data_collector[name]['TS guess key parameter'] = 'angle C=N-C'
@@ -122,7 +130,7 @@ def main():
                 curr_pysis_conf = file
                 data_collector[name]['pysis conformers properties'][curr_pysis_conf] = {}
                 match args.mode:
-                    case 'C-C=C-C':
+                    case 'C-C=C-C' | 'C-C=C-C=O':
                         dih_value = tsp.get_dihedral(curr_pysis_conf, *dihedral_nums)
                         data_collector[name]['pysis conformers properties'][curr_pysis_conf]['TS conformer key value'] = dih_value
                     case 'C-C=N-C':
@@ -179,7 +187,7 @@ def main():
                     data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac1 enthalpy']           =  float(reac1_dH)    
                     data_collector[name]['orca conformers properties'][curr_orca_dir]['orca reac2 enthalpy']           =  float(reac2_dH)    
                 match args.mode:
-                    case 'C-C=C-C':
+                    case 'C-C=C-C' | 'C-C=C-C=O':
                         dih_value_TS = tsp.get_dihedral(f'{curr_orca_dir}/cregened_conformers_Compound_2.xyz', *dihedral_nums)
                         dih_value_reac1 = tsp.get_dihedral(f'{curr_orca_dir}/cregened_conformers_Compound_4.xyz', *dihedral_nums)
                         dih_value_reac2 = tsp.get_dihedral(f'{curr_orca_dir}/cregened_conformers_Compound_5.xyz', *dihedral_nums)
@@ -258,6 +266,14 @@ def main():
                 # Selecting isomer with smaller dihedral as metastable
                 case 'C-C=C-C':
                     if abs(d['orca conformers properties'][conf]['orca reac1 conformer key value']) < abs(d['orca conformers properties'][conf]['orca reac2 conformer key value']):
+                        metastable = 'reac1'
+                    else:
+                        metastable = 'reac2'
+                    if args.verbose: print('For conf {conf}, structure with C-C=C-C angle', 
+                          d['orca conformers properties'][conf][f'orca {metastable} conformer key value'],
+                          'selected as metastable')
+                case 'C-C=C-C=O':
+                    if abs(d['orca conformers properties'][conf]['orca reac1 conformer key value']) > abs(d['orca conformers properties'][conf]['orca reac2 conformer key value']):
                         metastable = 'reac1'
                     else:
                         metastable = 'reac2'

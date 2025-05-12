@@ -439,7 +439,7 @@ $end'''
 $end'''
     with open('constraints.inp','w') as file:
         file.write(constraint_input)
-    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
+    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {dlen} {mdlen} | tee crest_TS_conf_sampling_stdout.log'
     os.system(crest_line)
     TS_conformers_path = f'{dirname}/crest_conformers.xyz'
     os.chdir(initial_path)
@@ -456,7 +456,7 @@ def crest_simple_sampling(input_file,
     '''
     input_file, initial_path = safe_dir(input_file, dirname)    
     os.chdir(dirname)
-    crest_line=f'{crest_path} {input_file} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
+    crest_line=f'{crest_path} {input_file} {optlev} {model} {solvent} {dlen} {mdlen} | tee crest_TS_conf_sampling_stdout.log'
     os.system(crest_line)
     conformers_path = f'{dirname}/crest_conformers.xyz'
     os.chdir(initial_path)
@@ -520,7 +520,7 @@ $end'''
     $end'''
     with open('constraints.inp','w') as file:
         file.write(constraint_input)
-    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {dlen} {mdlen} | tee xtb_TS_conf_sampling_stdout.log'
+    crest_line=f'{crest_path} {input_file} --cinp {cinp} {optlev} {model} {solvent} {dlen} {mdlen} | tee crest_TS_conf_sampling_stdout.log'
     os.system(crest_line)
     TS_conformers_path = f'{dirname}/crest_conformers.xyz'
     os.chdir(initial_path)
@@ -815,6 +815,24 @@ def confirm_orca_template_exists(orca_template_file, ask_yes = True):
                 return os.path.abspath(f'{template_dir}/{os.path.basename(orca_template_file)}')
             elif not os.path.isfile(f'{template_dir}/{os.path.basename(orca_template_file)}'):
                 sys.exit(f'ORCA template suggested by user, but no template file found in current directory nor among templates. Aborting.')
+def confirm_pysis_template_exists(pysis_template_file, ask_yes = True):
+    while True:
+        if os.path.isfile(pysis_template_file):
+            break
+        else:
+            print(f'pysisyphus template {pysis_template_file} not found, trying to find similar template in ts_pipeline/templates...')
+            template_dir = os.path.abspath(f'{ts_pipe_dir}/../templates')
+            if os.path.isfile(f'{template_dir}/{os.path.basename(pysis_template_file)}') and ask_yes:
+                confirmation = input(f'Found {os.path.basename(pysis_template_file)} in {template_dir}, confirm? [yes] ')
+                if 'y' in confirmation or not confirmation:
+                    return os.path.abspath(f'{template_dir}/{os.path.basename(pysis_template_file)}')
+                elif 'n' in confirmation:
+                    sys.exit('Aborted by user (pysis template not found)')
+            elif os.path.isfile(f'{template_dir}/{os.path.basename(pysis_template_file)}') and not ask_yes:
+                print(f'{pysis_template_file} not found, {os.path.basename(pysis_template_file)} found instead in {template_dir}. Taking the last one as template.')
+                return os.path.abspath(f'{template_dir}/{os.path.basename(pysis_template_file)}')
+            elif not os.path.isfile(f'{template_dir}/{os.path.basename(pysis_template_file)}'):
+                sys.exit(f'pysis template suggested by user, but no template file found in current directory nor among templates. Aborting.')
 #%%
 ### CATEGORY: processing functions                    
 def Williams_proc1(mol, e_dict, verbose = False):
