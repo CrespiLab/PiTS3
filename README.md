@@ -65,10 +65,10 @@ fragments_combiner frag1.cdxml frag2.cdxml
 
 ### tspipe
 ```
-tspipe -m 'C-C=C-C'    stilbene.xyz       | tee output_stilbene.log
-tspipe -m 'C-C=N-C'    diarylimine.xyz    | tee output_diarylimine.log
-tspipe -m 'C1=CCNC=C1' ADAE.xyz           | tee output_ADAE.log
-tspipe -m 'C1C=CCC=C1' NBD.xyz            | tee output_NBD.log
+tspipe -m 'C-C=C-C'    stilbene.xyz
+tspipe -m 'C-C=N-C'    diarylimine.xyz
+tspipe -m 'C1=CCNC=C1' ADAE.xyz
+tspipe -m 'C1C=CCC=C1' NBD.xyz
 ```
 
 ### ts_data_collector
