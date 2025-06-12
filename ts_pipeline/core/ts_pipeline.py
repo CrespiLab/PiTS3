@@ -596,7 +596,11 @@ def orca_multixyz(multixyzfile,
     multixyzfile = os.path.abspath(multixyzfile)
     orca_template = os.path.abspath(orca_template)
     os.chdir(dirname)
-    multixyz = shutil.copy(multixyzfile, '.')
+    try:
+        multixyz = shutil.copy(multixyzfile, '.')
+    except shutil.SameFileError as samefilerror:
+        multixyz = multixyzfile
+        print(samefilerror)
     multixyz = split_geoms(multixyz)
     for file in multixyz[0]:
         name = re.split(r'\.', file)[0]
