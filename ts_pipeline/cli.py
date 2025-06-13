@@ -23,6 +23,7 @@ def main():
     parser.add_argument('-m', '--mode', nargs='?', help='''TS mode (coordinate). Available options:
                         C-C=C-C       - stilbenes
                         C-C=C-C=O     - "oxindole"-type"
+                        O=C-C=N-N     - oxindole-type hydrazones
                         C-C=N-C       - imines
                         C1C=CCC=C1    - norbornadienes
                         C1=CCNC=C1    - diarylethenes''', required=True)
@@ -41,6 +42,7 @@ def main():
         sys.exit(f'''TS mode is not found! Select one of the available options:
 C-C=C-C       - for stilbenes
 C-C=C-C=O     - for "oxindole-type"
+O=C-C=N-N     - for oxindole-type hydrazones
 C-C=N-C       - for imines
 C1C=CCC=C1    - for norbornadienes
 C1=CCNC=C1    - for diarylethenes
@@ -74,6 +76,19 @@ C1=CCNC=C1    - for diarylethenes
         match args.mode:
             case 'C-C=C-C' | 'C-C=N-C':
                 dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))
+                opt_dih_value = tsp.get_dihedral(mol, *dihedral_nums)
+                dihedral_line_xtb = ','.join(map(str,dihedral_nums))
+                print(f'Reference smiles {args.mode} found, atom numbers: {dihedral_nums}')
+                if abs(opt_dih_value) < 90:
+                    dihedral_line_xtb += ',0.0'
+                    scan_line = '0.0, 180.0, 18'
+                else:
+                    dihedral_line_xtb += ',180.0'
+                    scan_line = '180.0, 0.0, 18'
+                angle_CNC_nums = dihedral_nums[1:]
+                constraint = tsp.find_fragment_atoms_with_neighbors(mol, args.mode, sanitize=False)
+            case 'O=C-C=N-N':
+                dihedral_nums = list(map(lambda x: x+1, tsp.find_fragment_atoms(mol, args.mode, sanitize = False)))[1:]
                 opt_dih_value = tsp.get_dihedral(mol, *dihedral_nums)
                 dihedral_line_xtb = ','.join(map(str,dihedral_nums))
                 print(f'Reference smiles {args.mode} found, atom numbers: {dihedral_nums}')
@@ -162,7 +177,7 @@ C1=CCNC=C1    - for diarylethenes
     ####### 2 Scan
         scan_dir = tsp.mkbasedir(mol, prefix='02_', suffix='_xtb_scan')
         match args.mode:
-            case 'C-C=C-C' | 'C-C=N-C' | 'C-C=C-C=O':
+            case 'C-C=C-C' | 'C-C=N-C' | 'C-C=C-C=O' | 'O=C-C=N-N':
                 scanned = tsp.xtb_scan_rotation(optimized, 
                                                 dirname=scan_dir, 
                                                 dihedral=dihedral_line_xtb, 
@@ -209,7 +224,7 @@ C1=CCNC=C1    - for diarylethenes
                           
         ####### 4.5 Intermediate TS geometry check
         match args.mode:
-            case 'C-C=C-C' | 'C-C=C-C=O':
+            case 'C-C=C-C' | 'C-C=C-C=O' :
                 check_dih_value = tsp.get_dihedral(TS, *dihedral_nums)
                 if abs(check_dih_value) < 60.0 or abs(check_dih_value) > 120.0:
                     print(f'Key parameter, dihedral {dihedral_nums} = {check_dih_value}, it is too far from 90.0, starting the next molecule (or stopping)')
