@@ -1,6 +1,6 @@
 *xyzfile 0 1 %ts_geom.xyz%
 %pal
-  nproc 16
+  nprocs 16
 end
 %maxcore 3000
 
