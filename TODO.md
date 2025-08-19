@@ -26,6 +26,10 @@
 - [ ] Scrape generated .xyz files and output into .json results (actual
 geometries)
 
+- [ ] Add automatic TS checks for imaginary frequencies
+- [ ] Rework detect neighbors for longer moieties
+- [ ] Add charge and multiplicity selection
+
 #### 2
 - [ ] Switch over to using ORCA for all steps
   - [ ] Investigate possibility of using NEB
